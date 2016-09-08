@@ -1,0 +1,168 @@
+{% if not printer %}
+<div id="load" style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.3); display: none;    color: #fff;
+                font-size: 20px;
+                font-weight: bold;
+                text-align: center;
+                line-height: 20;">Chargement</div>
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                {% for datas in analyses %}
+                  <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                      <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#{{ datas.user_id }}" aria-expanded="true" aria-controls="{{ datas.user_id }}">
+                            <span class="pull-right"><strong>Total :</strong>  {{ datas.total|round(1, 'floor') }}</span>
+                          <strong>Collaborateur :</strong> {{ datas.user.first_name }} {{ datas.user.last_name }}
+                        </a>
+                      </h4>
+                    </div>
+                    <div id="{{ datas.user_id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+                      <div class="panel-body">
+                          <table class="table table-striped">
+                              <thead>
+                                  <tr>
+                                      <th>Code Client</th>
+                                      <th>Nom du Client</th>
+                                      <th>Prospect</th>
+                                      <th>Heure</th>
+                                      <th>Monant</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                              {% for client in datas.clients %}
+                                  <tr>
+                                      <td>{{ client.ref_client }}</td>
+                                      <td>{{ client.client }}</td>
+                                      <td>
+                                          {% if client.prospect %}
+                                          {{ client.prospect.get().name }}
+                                          {% else %}
+                                            -
+                                          {% endif %}
+                                      </td>
+                                      <td>{{ client.time }}</td>
+                                      <td>{{ client.montant|format_price() }}</td>
+                                  </tr>
+                              {% endfor %}
+                                    <tr>
+                                        <td colspan="4"><strong>Total</strong></td>
+                                        <td>{{ datas.total_gene|format_price() }}</td>
+                                    </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+            </div>
+
+{% else %}
+<html lang='en'>
+ <head>
+ 	<meta charset='utf-8'>
+ 	<title>{{ title_page }}</title>
+
+     <script type="text/javascript" src="/static/js/pdfmake.js"></script>
+     <script type="text/javascript" src="/static/js/vfs_fonts.js"></script>
+     <script>
+
+          var docDefinition = {
+              pagesize: 'A4',
+              pageOrientation: 'landscape',
+              pageMargins:[30,50,30,30],
+              header: [
+                  {
+                      text: 'Accent Com ({{ title_page }})',
+                      alignment: 'center',
+                      margin:[0, 25, 0, 0]
+                  }
+              ],
+              footer:function(currentPage, pageCount) {
+                  return {
+                      text: currentPage.toString() + ' sur ' + pageCount,
+                      alignment: 'center'
+                  }
+              },
+              content: [
+                  {
+                      text: '{{ title_page }}',
+                      alignment: 'center',
+                      fontSize: 20,
+                      margin:[0, 20, 0, 20]
+                  },
+                  {
+                      text: 'Periode du {{ date_start|format_date('%d/%m/%Y') }} au {{ date_end|format_date('%d/%m/%Y') }}',
+                      alignment: 'center',
+                      margin:[0, 10, 0, 10]
+                  },
+                  {% for datas in analyses %}
+                      {% if loop.index > 1 %}
+                      {
+                          text:'---------', fontSize: 15, alignment:'center'
+                      },
+                      {% endif %}
+                      {
+                          table:{
+                                headerRows: 1,
+                                widths: ['*', 'auto'],
+                                body: [
+                                        [{ text: 'Collaborateur : {{ datas.user.first_name }} {{ datas.user.last_name }}', bold: true, alignment:'left' },{ text: 'Total: {{ datas.total|round(1, 'floor') }}',bold: true, alignment:'right' } ],
+                                        [
+                                            {   colSpan: 2,
+                                                table:{
+                                                     headerRows: 1,
+                                                     widths: ['*','*', '*', '*', '*'],
+                                                     body:[
+                                                            [{text:'Code Client', bold:true},{text:'Nom du Client', bold:true},{text:'Prospect', bold:true},{text:'Heure', bold:true}, {text:'Montant', bold:true}],
+                                                            {% for client in datas.clients %}
+                                                            ['{{ client.ref_client }}', '{{ client.client }}', '{% if client.prospect %}{{ client.prospect.get().name }}{% else %} - {% endif %}', '{{ client.time }}', '{{ client.montant|format_price() }}'],
+                                                            {% endfor %}
+                                                            [{ text:'Total', bold:true},'','','','{{ datas.total_gene|format_price() }}']
+                                                     ]
+                                                },
+                                                layout: 'lightHorizontalLines'
+                                            },
+                                            ''
+                                        ]
+
+                                ]
+                           },
+                          layout: {
+                                                            hLineWidth: function(i, node) {
+                                                                    return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                                                            },
+                                                            vLineWidth: function(i, node) {
+                                                                    return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                                                            },
+                                                            hLineColor: function(i, node) {
+                                                                    return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+                                                            },
+                                                            vLineColor: function(i, node) {
+                                                                    return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+                                                            }
+                                                            // paddingLeft: function(i, node) { return 4; },
+                                                            // paddingRight: function(i, node) { return 4; },
+                                                            // paddingTop: function(i, node) { return 2; },
+                                                            // paddingBottom: function(i, node) { return 2; }
+                            }
+                      }{% if loop.index != analyses|length %},{% endif %}
+                  {% endfor %}
+              ],
+              defaultStyle: {
+                alignment: 'center'
+              }
+          };
+          pdfMake.createPdf(docDefinition).open();
+     </script>
+ </head>
+ <body>
+
+</body>
+</html>
+
+{% endif %}
