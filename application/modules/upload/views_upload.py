@@ -206,7 +206,10 @@ def index():
 
             for budget in data['budget']:
                 bud = ChargeBudget()
-                bud.date_app = function.datetime_convert(budget['date_app'])
+
+                date_app = datetime.datetime.combine(function.date_convert(budget['date_app']), datetime.datetime.min.time())
+                bud.date_app = date_app
+
                 bud.montant = budget['montant']
                 bud.charge_id = charge_id
                 bud.save()
@@ -249,13 +252,16 @@ def index():
 
             for budget in data['budgets']:
                 bud = ClientBudget()
-                bud.date_app = function.datetime_convert(budget['date_app'])
+
+                date_app = datetime.datetime.combine(function.date_convert(budget['date_app']), datetime.datetime.min.time())
+                bud.date_app = date_app
+
                 bud.montant = budget['montant']
                 bud.client_id = client_id
                 bud.save()
 
 
-    url = "http://accentcom-time.com/api/client"
+    url = "http://accentcom-time.com/api/domaine"
     result = urlfetch.get(url)
     result = result.content
     result = json.loads(result)
@@ -296,11 +302,15 @@ def index():
             user.first_name = data['first_name']
             user.last_name = data['last_name']
             user.logged = data['logged']
-            user.date_last_logged = data['date_last_logged']
+            if data['date_last_logged'] != 'None':
+                user.date_last_logged = data['date_last_logged']
             user.google_id = data['google_id']
             user.date_update = function.datetime_convert(data['date_update'])
             user.tauxH = data['tauxH']
-            user.date_start = function.datetime_convert(data['date_start'])
+
+            if data['date_start'] != 'None':
+                date_start = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
+                user.date_start = date_start
 
             if data['fonction_id']:
                 fonction = Fonction.objects(libelle=data['fonction_id']).first()
@@ -333,7 +343,9 @@ def index():
 
             for horaire in data['horaires']:
                 horai = Horaire()
-                horai.date_start = function.datetime_convert(horaire['date_start'])
+
+                date_start = datetime.datetime.combine(function.date_convert(horaire['date_start']), datetime.datetime.min.time())
+                horai.date_start = date_start
 
                 horai.montant = horaire['montant']
                 horai.user = user_id
@@ -341,17 +353,160 @@ def index():
 
 
 
-        url = "http://accentcom-time.com/api/budget"
-        result = urlfetch.get(url)
-        result = result.content
-        result = json.loads(result)
+    url = "http://accentcom-time.com/api/budget"
+    result = urlfetch.get(url)
+    result = result.content
+    result = json.loads(result)
+
+    from ..budget.models_budget import Budget, BudgetPrestation
+    for data in result['data']:
+        user_id = Users.objects(email=data['user_id']).first()
+        date_start = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
+        exist_data = Budget.objects(
+            Q(date_start=date_start) & Q(user_id=user_id.id)
+        ).first()
+        if not exist_data:
+            budget = Budget()
+            budget.date_start = date_start
+            budget.heure  = data['heure']
+            budget.user_id = user_id
+            bud_id = budget.save()
+
+            for buds in data['budget_prestation']:
+                bud_pres = BudgetPrestation()
+                bud_pres.heure = buds['heure']
+
+                prest_id = Prestation.objects(sigle=buds['prestation_id']).first()
+                bud_pres.prestation_id = prest_id
+
+                bud_pres.budget_id = bud_id
+
+                bud_pres.save()
 
 
 
+    url = "http://accentcom-time.com/api/projet"
+    result = urlfetch.get(url)
+    result = result.content
+    result = json.loads(result)
+
+    from ..projet.models_projet import Projet
+    for data in result['data']:
+        exist_data = Projet.objects(code=data['code']).first()
+        if not exist_data:
+            proj = Projet()
+            proj.code = data['code']
+            proj.titre = data['titre']
+            proj.heure = data['heure']
+            proj.montant = data['montant']
+
+            date_start = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
+            proj.date_start = date_start
+
+            date_end = datetime.datetime.combine(function.date_convert(data['date_end']), datetime.datetime.min.time())
+            proj.date_end = date_end
+
+            proj.facturable = data['facturable']
+
+            domaine = Domaine.objects(libelle=data['domaine_id']).first()
+            proj.domaine_id = domaine
+
+            client = Client.objects(ref=data['client_id']).first()
+            proj.client_id = client
+
+            service = Service.objects(code=data['service_id']).first()
+            proj.service_id = service
+
+            if data['prospect_id']:
+                prospect = Client.objects(ref=data['prospect_id']).first()
+                proj.prospect_id = prospect
+
+            user = Users.objects(matricule=data['responsable_id']).first()
+            proj.responsable_id = user
+
+            proj.closed = data['closed']
+            proj.suspend = data['suspend']
+            proj.montant_projet_fdt = data['montant_projet_fdt']
+
+            proj_ = proj.save()
+
+            from ..frais.models_frais import FraisProjet
+            for frais in data['frais']:
+
+                frais_id = Frais.objects(libelle=frais['frais_id']).first()
+
+                frai = FraisProjet()
+                frai.facturable = frais['facturable']
+                frai.frais_id = frais_id
+                frai.projet_id = proj_
+                frai.montant = frais['montant']
+                frai.save()
 
 
+    url = "http://accentcom-time.com/api/tache"
+    result = urlfetch.get(url)
+    result = result.content
+    result = json.loads(result)
 
+    from ..tache.models_tache import Tache
+    from ..temps.models_temps import Temps, DetailTemps
+    for data in result['data']:
+        taches = Tache()
+        taches.titre = data['titre']
+        taches.description = data['description']
+        taches.heure = data['heure']
 
+        date_starts = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
+        taches.date_start = date_starts
+
+        taches.facturable = data['facturable']
+
+        if data['projet_id']:
+            projet = Projet.objects(code=data['projet_id']).first()
+            taches.projet_id = projet
+
+        if data['user_id']:
+            user = Users.objects(email=data['user_id']).first()
+            taches.user_id = user
+
+        if data['prestation_id']:
+            prestation = Prestation.objects(sigle=data['prestation_id']).first()
+            taches.prestation_id = prestation
+
+        taches.end = data['end']
+        taches.closed = data['closed']
+        taches.detail_heure = data['detail_heure']
+        tache_id = taches.save()
+
+        for temps in data['temps']:
+            t = Temps()
+
+            date_start_t = datetime.datetime.combine(function.date_convert(temps['date_start_t']), datetime.datetime.min.time())
+            t.date_start = date_start_t
+
+            date_end_t = datetime.datetime.combine(function.date_convert(temps['date_end_t']), datetime.datetime.min.time())
+            t.date_end = date_end_t
+
+            user = Users.objects(email=temps['user_id']).first()
+            t.user_id = user
+
+            t.tache_id = tache_id
+            t_id = t.save()
+
+            for detail in temps['list_details']:
+                d = DetailTemps()
+
+                date = datetime.datetime.combine(function.date_convert(detail['date']), datetime.datetime.min.time())
+                d.date = date
+
+                d.description = detail['description']
+                d.heure = function.datetime_convert(detail['heure'])
+                d.jour = detail['jour']
+                d.conversion = detail['conversion']
+                d.temps_id = t_id
+                d.ordre = detail['ordre']
+                d.parent = detail['parent']
+                d.save()
 
     if result['status'] == 200:
         return 'True'

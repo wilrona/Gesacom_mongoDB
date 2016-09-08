@@ -9,7 +9,7 @@ class Client(db.Document):
     adresse = db.StringField()
     ville = db.StringField()
     pays = db.StringField()
-    email = db.EmailField()
+    email = db.StringField()
     phone = db.StringField()
     date_created = db.DateTimeField()
     prospect = db.BooleanField(default=False)

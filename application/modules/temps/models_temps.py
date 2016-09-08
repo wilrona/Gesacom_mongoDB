@@ -18,7 +18,7 @@ class DetailTemps(db.Document):
     date = db.DateTimeField()
     description = db.StringField()
     heure = db.DateTimeField()
-    jour = db.DateTimeField()
+    jour = db.IntField()
     conversion = db.FloatField()
     temps_id = db.ReferenceField(Temps)
     ordre = db.IntField()
