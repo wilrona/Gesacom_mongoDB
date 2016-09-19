@@ -1,9 +1,10 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from ..tache.models_tache import Projet, Tache, Users, Prestation
+from ..tache.models_tache import Projet
+from ..prestation.models_prest import Prestation
+from ..temps.models_temps import Users, Temps, Tache, DetailTemps
 from forms_tache import FormTache
-
 
 
 prefix = Blueprint('tache', __name__)
@@ -28,6 +29,11 @@ def index():
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 25
+    if page > 1:
+        offset = ((page - 1) * 25)
+
     #id Prestatation Ferier, Conge et Absence
 
     prest_ferier = Prestation.objects(sigle='FER').first()
@@ -36,26 +42,37 @@ def index():
 
     if prest_absence and prest_conge and prest_ferier:
 
+        count = Tache.objects(
+            Q(end=False) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
+        ).count()
+
         datas = Tache.objects(
             Q(end=False) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
-        )
+        ).skip(offset).limit(limit).order_by('-date_start')
 
         if request.args.get('filtre') and request.args.get('filtre') is not None:
 
             if request.args.get('filtre') == 'end':
+                count = Tache.objects(
+                    Q(end=True) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
+                ).count()
+
                 datas = Tache.objects(
                     Q(end=True) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
-                )
+                ).skip(offset).limit(limit).order_by('-date_start')
+
                 small_title = 'terminees'
 
             if request.args.get('filtre') == 'cloture':
+                count = Tache.objects(
+                    Q(end=False) & Q(closed=True) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
+                ).count()
                 datas = Tache.objects(
                     Q(end=False) & Q(closed=True) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne=prest_ferier.id)
-                )
+                ).skip(offset).limit(limit).order_by('-date_start')
                 small_title = 'cloturees'
 
-        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=len(datas), search=search, record_name='Taches')
-        datas.paginate(page=page, per_page=25)
+        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Taches')
     else:
         if current_user.has_roles(['prestation']):
             flash('Demandez a l\'administrateur de configurer au mieux les prestations de l\'application', 'warning')
@@ -85,6 +102,9 @@ def me():
     except ValueError:
         page = 1
 
+    limit = 25
+    offset = ((page - 1) * 25)
+
     #id Prestatation Ferier, Conge et Absence
 
     prest_ferier = Prestation.objects(sigle='FER').first()
@@ -93,25 +113,33 @@ def me():
 
     if prest_absence and prest_conge and prest_ferier:
 
+        count = Tache.objects(
+            Q(user_id=user.id) & Q(end=False) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
+        ).count()
         datas = Tache.objects(
             Q(user_id=user.id) & Q(end=False) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
-        )
+        ).skip(offset).limit(limit).order_by('-date_start')
 
         if request.args.get('filtre') and request.args.get('filtre') is not None:
             if request.args.get('filtre') == 'end':
+                count = Tache.objects(
+                    Q(user_id=user.id) & Q(end=True) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
+                ).count()
                 datas = Tache.objects(
                     Q(user_id=user.id) & Q(end=True) & Q(closed=False) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
-                )
+                ).skip(offset).limit(limit).order_by('-date_start')
                 small_title = 'terminees'
 
             if request.args.get('filtre') == 'cloture':
+                count = Tache.objects(
+                    Q(user_id=user.id) & Q(end=True) & Q(closed=True) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
+                ).count()
                 datas = Tache.objects(
                     Q(user_id=user.id) & Q(end=True) & Q(closed=True) & Q(prestation_id__ne=prest_conge.id) & Q(prestation_id__ne=prest_absence.id) & Q(prestation_id__ne= prest_ferier.id)
-                )
+                ).skip(offset).limit(limit).order_by('-date_start')
                 small_title = 'cloturees'
 
-        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=len(datas), search=search, record_name='Taches')
-        datas.paginate(page=page, per_page=25)
+        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Taches')
 
     else:
         flash('Demandez a l\'administrateur de configurer au mieux les prestations de l\'application', 'warning')
@@ -129,14 +157,14 @@ def edit(tache_id=None):
     if tache_id:
         tache = Tache.objects.get(id=tache_id)
         form = FormTache(obj=tache)
-        form.user_id.data = tache.user_id.id
-        form.prestation_id.data = tache.prestation_id.id
-        form.projet_id.data = tache.projet_id.id
+        form.user_id.data = str(tache.user_id.id)
+        form.prestation_id.data = str(tache.prestation_id.id)
+        form.projet_id.data = str(tache.projet_id.id)
         if tache.facturable:
             form.facturable.data = '1'
         else:
             form.facturable.data = '2'
-        form.id.data = tache.id
+        form.id.data = str(tache.id)
     else:
         tache = Tache()
         form = FormTache()
@@ -148,7 +176,7 @@ def edit(tache_id=None):
         form.projet_id.choices.append((str(projet.id), projet.titre))
 
     form.user_id.choices = [(0, 'Selectionnez l\'utilisateur')]
-    for user in Users.objects(email__ne = 'admin@accentcom-cm.com'):
+    for user in Users.objects(email__ne='admin@accentcom-cm.com'):
         form.user_id.choices.append((str(user.id), user.first_name+" "+user.last_name))
 
     if form.prestation_id.data:
@@ -212,8 +240,9 @@ def edit(tache_id=None):
 
     return render_template('tache/edit.html', **locals())
 
+
 @prefix.route('/no_projet/edit', methods=['GET', 'POST'])
-@prefix.route('/no_projet/edit/<int:tache_id>', methods=['GET', 'POST'])
+@prefix.route('/no_projet/edit/<objectid:tache_id>', methods=['GET', 'POST'])
 @login_required
 @roles_required([('super_admin', 'tache')], ['edit'])
 def hors_projet(tache_id=None):
@@ -310,7 +339,7 @@ def hors_projet(tache_id=None):
 @prefix.route('/delete/<objectid:tache_id>')
 @login_required
 def delete(tache_id):
-    from ..temps.models_temps import Temps
+    # from ..temps.models_temps import Temps
 
     tache = Tache.objects.get(id=tache_id)
 
@@ -353,7 +382,7 @@ def end(tache_id):
     else:
         tache.end = True
         if not tache.projet_id:
-            from ..temps.models_temps import Temps
+            # from ..temps.models_temps import Temps
             day = datetime.date.today().strftime('%d/%m/%Y')
             dt = datetime.datetime.strptime(day, '%d/%m/%Y')
             start = dt - timedelta(days=dt.weekday())
@@ -404,10 +433,17 @@ def index(projet_id):
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 25
+    if page > 1:
+        offset = ((page - 1) * 25)
+
     projet = Projet.objects.get(id=projet_id)
-    datas = Tache.objects(projet_id= projet.id)
-    pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=len(datas), search=search, record_name='Taches')
-    datas.paginate(page=page, per_page=25)
+
+    count = Tache.objects(projet_id= projet.id).count()
+    datas = Tache.objects(projet_id= projet.id).skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Taches')
 
     return render_template('tache/tache_projet.html', **locals())
 
@@ -520,7 +556,7 @@ def facturations(prestation_id = None):
 # cron temps remplit sur une tache
 @prefix.route('/fdt_tache')
 def fdt_tache():
-    from ..temps.models_temps import Temps, Tache, DetailTemps
+    # from ..temps.models_temps import Temps, DetailTemps
 
     for tache in Tache.objects():
         total = 0.0
@@ -539,7 +575,7 @@ def fdt_tache():
 
 @prefix.route('/montant_projet_fdt')
 def montant_projet_fdt():
-    from ..tache.models_tache import Tache, Projet
+    # from ..tache.models_tache import Tache, Projet
 
     for projet in Projet.objects():
 

@@ -20,7 +20,7 @@
               </div>
 
               <div class="btn-group pull-right">
-                <a href="{{ url_for('frais_tache.edit', tache_id=tache_id) }}" class="btn btn-primary {% if not tache.user_id.id|int == session.get('user_id')|int and tache.end and tache.closed %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
+                <a href="{{ url_for('frais_tache.edit', tache_id=tache_id) }}" class="btn btn-primary {% if not tache.user_id.id == session.get('user_id') and tache.end and tache.closed %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
               </div>
             </div>
           </div>
@@ -34,7 +34,7 @@
                 <th width="15%">Montant</th>
                 <th width="15%">Frais</th>
                 <th width="20%">FDT concernee</th>
-                {% if tache.user_id.id|int == session.get('user_id')|int and not tache.end and not tache.closed %}
+                {% if tache.user_id.id == session.get('user_id') and not tache.end and not tache.closed %}
                 <th width="10%">Action</th>
                 {% endif %}
             </tr>
@@ -53,7 +53,7 @@
                             Aucune
                         {% endif %}
                     </td>
-                   {% if tache.user_id.id|int == session.get('user_id')|int and not tache.end and not tache.closed %}
+                   {% if tache.user_id.id == session.get('user_id') and not tache.end and not tache.closed %}
                     <td>
                         <a href="{{ url_for('frais_tache.edit', tache_id=tache_id, detail_frais_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
                         <a href="{{ url_for('frais_tache.delete', detail_frais_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="fa fa-trash"></i></a>

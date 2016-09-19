@@ -1,8 +1,8 @@
 __author__ = 'Ronald'
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
-from lib.flaskext.wtf.html5 import NumberInput
+from flaskext import wtf
+from flaskext.wtf import validators
+from flaskext.wtf.html5 import NumberInput
 from ...modules import *
 
 
@@ -12,10 +12,12 @@ def control_date(form, field):
     start = dt - timedelta(days=dt.weekday())
     end = start + timedelta(days=6)
 
-    send_date = function.datetime_convert(field.data)
+    send_date = datetime.datetime.combine(function.date_convert(field.data), datetime.datetime.min.time())
+    send_start = datetime.datetime.combine(function.date_convert(start), datetime.datetime.min.time())
+    send_end = datetime.datetime.combine(function.date_convert(end), datetime.datetime.min.time())
 
     if not form.derob.data:
-        if send_date < function.datetime_convert(start) or send_date > function.datetime_convert(end):
+        if send_date < send_start or send_date > send_end:
             raise wtf.ValidationError('La date doit etre comprise entre '+function.format_date(start, '%d/%m/%Y')+" et "+function.format_date(end, '%d/%m/%Y'))
 
 

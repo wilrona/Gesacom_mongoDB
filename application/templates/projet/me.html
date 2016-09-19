@@ -20,6 +20,13 @@
                   <li {% if request.args.get('filtre') and request.args.get('filtre') == 'cloture' %} class="active" {% endif %}><a href="{{ url_for('projet.me', filtre='cloture') }}">Cloture</a></li>
               </ul>
             </div>
+          {% if admin_user != user %}
+            <div class="btn-toolbar" role="toolbar">
+              <div class="btn-group pull-right">
+                <a href="{{ url_for('projet.edit_demande') }}" class="btn btn-info">Demande de creation d'un projet</a>
+              </div>
+            </div>
+          {% endif %}
           </div>
         </nav>
         <table class="table table-condensed table-hover">
@@ -34,14 +41,18 @@
             </thead>
             <tbody>
                 {% for data in all_projet %}
-                   <tr {% if data.responsable_id|int == session.get('user_id')|int %} class="active" {% endif %}>
+
+                   <tr {% if data.responsable_id|string == session.get('user_id')|string %} {% if data.attente or data.rejet %} class="warning" {% else %} class="active" {% endif %} {% endif %}>
                     <td>{{ data.code }}</td>
                     <td>{{ data.titre }}</td>
                     <td>{{ data.client }}</td>
                     <td>{{ data.responsable }}</td>
                     <td>
+                        {% if data.attente %}
+                        <a href="{{ url_for('projet.edit_demande', projet_id=data.id, user='1') }}" class="btn btn-link btn-xs" ><i class="fa fa-pencil-square-o"></i></a>
+                        {% else %}
                         <a href="{{ url_for('projet.edit', projet_id=data.id, user='1') }}" class="btn btn-link btn-xs" ><i class="fa fa-pencil-square-o"></i></a>
-
+                        {% endif %}
                     </td>
                   </tr>
                 {% else %}
@@ -53,7 +64,7 @@
                 {% endfor %}
             </tbody>
         </table>
-{#        {{ pagination.links }}#}
+        {{ pagination.links }}
 
     </div>
     <div class="col-lg-3">

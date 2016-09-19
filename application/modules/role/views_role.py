@@ -24,8 +24,16 @@ def index():
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-    datas = Roles.objects(Q(valeur__ne='super_admin') & Q(parent=None))
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Roles')
+
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Roles.objects(Q(valeur__ne='super_admin') & Q(parent=None)).count()
+    datas = Roles.objects(Q(valeur__ne='super_admin') & Q(parent=None)).skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Roles')
 
     return render_template('role/index.html', **locals())
 

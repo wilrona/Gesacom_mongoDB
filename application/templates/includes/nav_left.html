@@ -45,6 +45,9 @@
                             {% if current_user.has_roles([('super_admin', 'projet')]) %}
                           <li><a href="{{ url_for('projet.index') }}">Tous les projets</a></li>
                             {% endif %}
+                            {% if current_user.has_roles([('super_admin', 'projet_demande')]) %}
+                          <li><a href="{{ url_for('projet.index_demande') }}">Demandes projets</a></li>
+                            {% endif %}
                         </ul>
                       </div>
                    {% endif %}
@@ -61,9 +64,19 @@
                 {% if current_user.has_roles([('super_admin', 'projet')]) %}
                 <li class="list-group-item subitem {% if submenu == 'tous' %} active {% endif %}"><a href="{{ url_for('projet.index') }}">Tous les projets</a></li>
                 {% endif %}
+                {% if current_user.has_roles([('super_admin', 'projet_demande')]) %}
+                <li class="list-group-item subitem {% if submenu == 'demande' %} active {% endif %}"><a href="{{ url_for('projet.index_demande') }}">Demandes projets</a></li>
+                {% endif %}
             {% endif %}
 
           {% if not current_user.has_roles(['super_admin']) %}
+              <li class="divider"></li>
+
+            <li class="list-group-item {% if menu == 'self_finance' %} active  {% endif %}" >
+               <div class="list-group-item-wrapper">
+                  <a href="{{ url_for('besoin.index_user') }}"><span class="fa fa-money"></span>&nbsp;&nbsp;Mes Besoins Financiers<span class="sr-only"></span></a>
+                </div>
+            </li>
             <li class="divider"></li>
 
             <li class="list-group-item {% if menu == 'temps' %} active  {% endif %}" >
@@ -71,13 +84,17 @@
                   <a href="{{ url_for('temps.index') }}"><span class="glyphicon glyphicon-calendar"></span>&nbsp;&nbsp;Feuilles de Temps<span class="sr-only"></span></a>
                 </div>
             </li>
-            <li class="divider"></li>
-            <li class="list-group-item  {% if menu == 'conge' %} active  {% endif %}">
-               <div class="list-group-item-wrapper">
-                  <a href="{{ url_for('conge.index') }}"><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;Absence/Congé<span class="sr-only"></span></a>
-                </div>
+           <li class="divider"></li>
 
-             </li>
+          {% endif %}
+          {% if current_user.has_roles([('super_admin', 'projet_finance')]) %}
+              <li class="divider"></li>
+
+            <li class="list-group-item {% if menu == 'finance' %} active  {% endif %}" >
+               <div class="list-group-item-wrapper">
+                  <a href="{{ url_for('besoin.index') }}"><span class="glyphicon glyphicon-piggy-bank"></span>&nbsp;&nbsp;Gestion besoins Financiers<span class="sr-only"></span></a>
+                </div>
+            </li>
           {% endif %}
           {% if current_user.has_roles([('super_admin', 'client', 'contact')]) %}
              <li class="divider"></li>
@@ -116,7 +133,21 @@
             {% endif %}
           {% endif %}
 
-            {% if current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge', 'profil', 'user', 'budget_userH', 'budget_userV', 'budget_charge', 'budget_client', 'ferier')]) %}
+          {% if current_user.has_roles([('super_admin', 'user', 'user_infos', 'user_permmission', 'user_horaire', 'user_budget' )]) %}
+
+                 <li class="divider"></li>
+                 <li class="list-group-item {% if menu == 'user' %} active  {% endif %}">
+                   <div class="list-group-item-wrapper">
+
+                   <a href="{{ url_for('user_param.index') }}"><span class="fa fa-users"></span>&nbsp;&nbsp;Employée<span class="sr-only"></span></a>
+                   </div>
+
+
+                </li>
+
+          {% endif %}
+
+            {% if current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge', 'profil', 'budget_userH', 'budget_userV', 'budget_charge', 'budget_client', 'ferier')]) %}
                  <li class="divider"></li>
                  <li class="list-group-item {% if menu == 'societe' %} active  {% endif %}">
                    <div class="list-group-item-wrapper">
@@ -129,9 +160,6 @@
                                 {% endif %}
                                 {% if current_user.has_roles([('super_admin', 'profil')]) %}
                               <li><a href="{{ url_for('profil.index') }}">Profils/Roles</a></li>
-                                {% endif %}
-                                {% if current_user.has_roles([('super_admin', 'user', 'user_infos', 'user_permmission', 'user_horaire', 'user_budget' )]) %}
-                              <li><a href="{{ url_for('user_param.index') }}">Utilisateur</a></li>
                                 {% endif %}
 
 {#                                Gestion des menus lie au budget#}
@@ -164,9 +192,6 @@
                      {% endif %}
                      {% if current_user.has_roles([('super_admin', 'profil')]) %}
                     <li class="list-group-item subitem {% if submenu == 'roles' %} active {% endif %}"><a href="{{ url_for('profil.index') }}">Profils/Roles</a></li>
-                     {% endif %}
-                     {% if current_user.has_roles([('super_admin', 'user')]) %}
-                    <li class="list-group-item subitem {% if submenu == 'users' %} active {% endif %}"><a href="{{ url_for('user_param.index') }}">Utilisateurs</a></li>
                      {% endif %}
                      {% if current_user.has_roles([('super_admin', 'budget')]) %}
                     <li class="list-group-item subitem {% if submenu == 'budget' %} active {% endif %}"><a href="{{ url_for('budget.index') }}">Budgets</a></li>

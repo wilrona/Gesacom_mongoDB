@@ -85,9 +85,9 @@
 
     {% if success  %}
         {% if context == 'absence' %}
-            window.location.replace(window.location.origin+"{{ url_for('conge.temps_absence', prestation_id=tache.prestation_id.id) }}").delay();
+            window.location.replace(window.location.origin+"{{ url_for('conge.temps_absence', user_id=tache.user_id.id) }}").delay();
         {% elif context == 'conge' %}
-            window.location.replace(window.location.origin+"{{ url_for('conge.temps_conge', prestation_id=tache.prestation_id.id) }}").delay();
+            window.location.replace(window.location.origin+"{{ url_for('conge.temps_conge', user_id=tache.user_id.id) }}").delay();
         {% else %}
             window.location.replace(window.location.origin+"{{ url_for('temps_tache.index', tache_id=tache_id) }}").delay();
         {% endif %}

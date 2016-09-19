@@ -25,9 +25,15 @@ def index():
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-    datas = Prestation.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='prestation')
-    datas.paginate(page=page, per_page=10)
+
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Prestation.objects().count()
+    datas = Prestation.objects().skip(offset).limit(limit)
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='prestation')
 
     return render_template('prestation/index.html', **locals())
 

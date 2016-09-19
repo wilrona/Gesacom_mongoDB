@@ -1,0 +1,123 @@
+<div class="modal-header bg-primary">
+        <h4 class="modal-title" id="myModalLabel">Ajout d'un besoin financier</h4>
+</div>
+
+<form class="form-horizontal" role="form" id="formulaire" action="">
+
+    {{ form.hidden_tag() }}
+    <div class="modal-body">
+
+        <div class="form-group">
+            {{ form.projet_id.label(class_='col-sm-3 control-label') }}
+            <div class="col-sm-9">
+                {% if solde and besoin_id %}
+                      <p class="form-control-static">{{ besoin.projet_id.titre }}</p>
+                      <input type="hidden" name="projet_id" value="{{ besoin.projet_id.id }}"/>
+                {% else %}
+                    {{ form.projet_id(class_='form-control g-select') }}
+                {% endif %}
+                {% for message in form.projet_id.errors %}
+                    <div class="alert alert-danger form-validator">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+      <div class="form-group">
+        {{ form.fournisseur.label(class_='col-sm-3 control-label') }}
+        <div class="col-sm-9">
+         {% if solde and besoin_id %}
+            <p class="form-control-static">{{ besoin.fournisseur }}</p>
+            <input type="hidden" name="fournisseur" value="{{ besoin.fournisseur }}"/>
+         {% else %}
+            {{ form.fournisseur(class_='form-control') }}
+         {% endif %}
+        {% for message in form.fournisseur.errors %}
+            <div class="alert alert-danger form-validator">{{ message }}</div>
+        {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        {{ form.commande.label(class_='col-sm-3 control-label') }}
+        <div class="col-sm-9">
+        {% if solde and besoin_id %}
+            <p class="form-control-static">{{ besoin.commande }}</p>
+            <input type="hidden" name="commande" value="{{ besoin.commande }}"/>
+        {% else %}
+        {{ form.commande(class_='form-control') }}
+        {% endif %}
+        {% for message in form.commande.errors %}
+            <div class="alert alert-danger form-validator">{{ message }}</div>
+        {% endfor %}
+        </div>
+      </div>
+     <div class="form-group">
+        {{ form.montant.label(class_='col-sm-3 control-label') }}
+        <div class="col-sm-9">
+        {% if solde and besoin_id %}
+            <p class="form-control-static">{{ besoin.montant }}</p>
+            <input type="hidden" name="montant" value="{{ besoin.montant }}"/>
+        {% else %}
+        {{ form.montant(class_='form-control') }}
+        {% endif %}
+        {% for message in form.montant.errors %}
+            <div class="alert alert-danger form-validator">{{ message }}</div>
+        {% endfor %}
+        </div>
+      </div>
+     <div class="form-group">
+        {{ form.avance.label(class_='col-sm-3 control-label') }}
+        <div class="col-sm-9">
+        {{ form.avance(class_='form-control') }}
+        {% for message in form.avance.errors %}
+            <div class="alert alert-danger form-validator">{{ message }}</div>
+        {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        {{ form.date_echeance.label(class_='col-sm-3 control-label') }}
+        <div class="col-sm-9">
+        {{ form.date_echeance(class_='form-control', id="datepicker") }}
+        {% for message in form.date_echeance.errors %}
+            <div class="alert alert-danger form-validator">{{ message }}</div>
+        {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+        <button type="button" id="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+
+</form>
+<script>
+    $('#submit').on('click', function(e){
+        e.preventDefault();
+        $.ajax({
+                url: "{{ url_for('besoin.edit_user', besoin_id=besoin_id, relance=request.args.get('relance')) }}",
+                data: $('#formulaire').serialize(),
+                type: 'POST',
+                success: function(data) {
+                    $('.modal-content').html(data);
+                }
+            });
+    });
+
+    // Google styled selects
+    $("select.g-select").each(function() {
+        var e = $(this)
+        e.select2()
+    });
+
+    $('#datepicker').datepicker({
+        format: "dd/mm/yyyy",
+        weekStart: 1,
+        todayBtn: "linked",
+        orientation: "top auto",
+        todayHighlight: true
+    });
+
+    $('#datepicker').inputmask("date", { placeholder:"__/__/____"});
+
+    {% if success %}
+        window.location.replace(window.location.origin+"{{ url_for('besoin.index_user') }}").delay();
+    {% endif %}
+</script>

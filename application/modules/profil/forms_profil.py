@@ -1,8 +1,8 @@
 __author__ = 'wilrona'
 
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
+from flaskext import wtf
+from flaskext.wtf import validators
 from models_profil import Profil
 
 

@@ -23,6 +23,21 @@
     <a href="{{ url_for('user_param.budget', user_id=user_id) }}"> Budget</a>
   </li>
 {% endif %}
+{% if current_user.has_roles([('super_admin', 'user_formation')]) %}
+ <li {% if context == 'formation' %} class="active" {% endif %}>
+    <a href="{{ url_for('user_param.formation', user_id=user_id) }}"> Formations</a>
+  </li>
+{% endif %}
+{% if current_user.has_roles([('super_admin', 'user_absence')]) %}
+ <li {% if context == 'absence' %} class="active" {% endif %}>
+    <a href="{{ url_for('conge.temps_absence', user_id=user_id) }}"> Absences</a>
+  </li>
+{% endif %}
+{% if current_user.has_roles([('super_admin', 'user_conge')]) %}
+ <li {% if context == 'conge' %} class="active" {% endif %}>
+    <a href="{{ url_for('conge.temps_conge', user_id=user_id) }}"> Conges</a>
+  </li>
+{% endif %}
 
 
 

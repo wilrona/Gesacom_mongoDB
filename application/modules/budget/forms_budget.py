@@ -1,8 +1,8 @@
 __author__ = 'Ronald'
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
-from lib.flaskext.wtf.html5 import NumberInput
+from flaskext import wtf
+from flaskext.wtf import validators
+from flaskext.wtf.html5 import NumberInput
 
 
 def verif_dispobilite(form, field):

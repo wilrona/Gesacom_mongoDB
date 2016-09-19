@@ -1,9 +1,8 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_charge import Charge
+from models_charge import Charge, Societe
 from forms_charge import FormCharge
-from ..societe.models_societe import Societe
 
 prefix = Blueprint('charge', __name__)
 
@@ -26,10 +25,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Charge.objects()
+    offset = 0
+    limit = 25
+    if page > 1:
+        offset = ((page - 1) * 25)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Charges')
-    datas.paginate(page=page, per_page=10)
+    datas = Charge.objects().skip(offset).limit(limit)
+    count = Charge.objects().count()
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Charges')
 
     return render_template('charge/index.html', **locals())
 

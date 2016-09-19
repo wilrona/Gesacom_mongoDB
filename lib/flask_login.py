@@ -537,6 +537,9 @@ class AnonymousUserMixin(object):
     def get_id(self):
         return
 
+    def has_roles(self, requirements, accesibles=None):
+        return False
+
 
 def encode_cookie(payload):
     '''

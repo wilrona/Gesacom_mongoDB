@@ -1,7 +1,7 @@
 __author__ = 'Ronald'
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
+from flaskext import wtf
+from flaskext.wtf import validators
 from models_client import Client
 
 

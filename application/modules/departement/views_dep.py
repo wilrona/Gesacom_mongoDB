@@ -1,9 +1,8 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_dep import Departement
+from models_dep import Departement, Societe
 from forms_dep import FormDep
-from ..societe.models_societe import Societe
 
 
 prefix = Blueprint('departement', __name__)
@@ -27,9 +26,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Departement.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='departements')
-    datas.paginate(page=page, per_page=10)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    datas = Departement.objects().skip(offset).limit(limit)
+    count = Departement.objects().count()
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='departements')
 
     return render_template('departement/index.html', **locals())
 

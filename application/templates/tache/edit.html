@@ -56,9 +56,9 @@
         {{ form.user_id.label(class_='col-sm-3 control-label') }}
         <div class="col-sm-9">
         {% if tache_id %}
-            {{ tache.user_id.get().last_name }}
-            {{ tache.user_id.get().first_name }}
-            <input type="hidden" name="user_id" value="{{ tache.user_id.get().key.id() }}"/>
+            {{ tache.user_id.last_name }}
+            {{ tache.user_id.first_name }}
+            <input type="hidden" name="user_id" value="{{ tache.user_id.id }}"/>
         {% else %}
             {{ form.user_id(class_='form-control g-select') }}
             {% for message in form.user_id.errors %}
@@ -71,7 +71,7 @@
         {{ form.prestation_id.label(class_='col-sm-3 control-label') }}
         <div class="col-sm-9">
          {% if tache_id %}
-            {{ tache.prestation_id.get().libelle }}
+            {{ tache.prestation_id.libelle }}
             <input type="hidden" name="prestation_id" value="{{ tache.prestation_id.id }}"/>
          {% else %}
              <select name="prestation_id" class="form-control g-select" id="prestation">

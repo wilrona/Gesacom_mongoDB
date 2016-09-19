@@ -1,7 +1,7 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_frais import Frais, FraisProjet, Projet
+from ..projet.models_projet import Projet, Frais, FraisProjet
 from forms_frais import FormFrais, FormFraisProjet, FormFraisTache
 from ..temps.models_temps import Temps, Tache, DetailFrais, DetailTemps
 
@@ -29,9 +29,14 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Frais.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='frais')
-    datas.paginate(page=page, per_page=10)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Frais.objects().count()
+    datas = Frais.objects().skip(offset).limit(limit)
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='frais')
 
     return render_template('frais/index.html', **locals())
 
@@ -98,11 +103,18 @@ def index(projet_id):
     except ValueError:
         page = 1
 
-    projet = Projet.objects.get(id=projet_id)
-    datas = FraisProjet.objects(projet_id = projet.id)
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Projets')
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
 
-    datas.paginate(page=page, per_page=10)
+    projet = Projet.objects.get(id=projet_id)
+
+
+    count = FraisProjet.objects(projet_id = projet.id).count()
+    datas = FraisProjet.objects(projet_id = projet.id).skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Projets')
 
     return render_template('frais/frais_projet.html', **locals())
 
@@ -221,37 +233,42 @@ def index(tache_id):
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
     datas = []
     pagination = None
     if temps:
-        datas = DetailFrais.objects(temps_id=temps.id)
+        count = DetailFrais.objects(temps_id=temps.id).count()
+        datas = DetailFrais.objects(temps_id=temps.id).skip(offset).limit(limit)
 
-        pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Frais de la tache')
-        datas.paginate(page=page, per_page=10)
+        pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Frais de la tache')
 
     return render_template('frais/frais_tache.html', **locals())
 
 
-@prefix_tache.route('/frais/edit/<int:tache_id>', methods=['GET', 'POST'])
-@prefix_tache.route('/frais/edit/<int:tache_id>/<int:detail_frais_id>', methods=['GET', 'POST'])
+@prefix_tache.route('/frais/edit/<objectid:tache_id>', methods=['GET', 'POST'])
+@prefix_tache.route('/frais/edit/<objectid:tache_id>/<objectid:detail_frais_id>', methods=['GET', 'POST'])
 @login_required
 def edit(tache_id, detail_frais_id=None):
 
-    tache = Tache.get_by_id(tache_id)
+    tache = Tache.objects.get(id=tache_id)
 
     if detail_frais_id:
-        detail_frais = DetailFrais.get_by_id(detail_frais_id)
+        detail_frais = DetailFrais.objects.get(id=detail_frais_id)
         form = FormFraisTache(obj=detail_frais)
-        form.frais_projet_id.data = detail_frais.frais_projet_id.get().key.id()
+        form.frais_projet_id.data = detail_frais.frais_projet_id.id
         if detail_frais.detail_fdt:
-            form.detail_fdt.data = detail_frais.detail_fdt.get().key.id()
+            form.detail_fdt.data = detail_frais.detail_fdt.id
     else:
         detail_frais = DetailFrais()
         form = FormFraisTache()
 
     form.frais_projet_id.choices = [(0, 'Selectionnez le frais applique')]
-    for frais in FraisProjet.query(FraisProjet.projet_id == tache.projet_id):
-        form.frais_projet_id.choices.append((str(frais.id), frais.frais_id.get().libelle))
+    for frais in FraisProjet.objects(projet_id=tache.projet_id):
+        form.frais_projet_id.choices.append((str(frais.id), frais.frais_id.libelle))
 
     day = datetime.date.today().strftime('%d/%m/%Y')
     dt = datetime.datetime.strptime(day, '%d/%m/%Y')
@@ -259,16 +276,14 @@ def edit(tache_id, detail_frais_id=None):
     end = start + timedelta(days=6)
 
 
-    temps = Temps.query(
-        Temps.tache_id == tache.key,
-        Temps.date_start == start,
-        Temps.date_end == end
-    ).get()
+    temps = Temps.objects(
+        Q(tache_id=tache.id) & Q(date_start=start) & Q(date_end=end)
+    ).first()
 
     form.detail_fdt.choices = [(0, 'Selectionnez la FDT concernee')]
     if temps:
-        for frais in DetailTemps.query(DetailTemps.temps_id == temps.key):
-            form.detail_fdt.choices.append((frais.key.id(), frais.description))
+        for frais in DetailTemps.objects(temps_id=temps.id):
+            form.detail_fdt.choices.append((str(frais.id), frais.description))
 
     success = False
     if form.validate_on_submit():
@@ -277,25 +292,25 @@ def edit(tache_id, detail_frais_id=None):
         detail_frais.montant = form.montant.data
         detail_frais.description = form.description.data
 
-        frais_projet = FraisProjet.get_by_id(form.frais_projet_id.data)
-        detail_frais.frais_projet_id = frais_projet.key
+        frais_projet = FraisProjet.objects.get(id=form.frais_projet_id.data)
+        detail_frais.frais_projet_id = frais_projet
 
         if form.detail_fdt.data:
-            details_DFT = DetailTemps.get_by_id(form.detail_fdt.data)
-            detail_frais.detail_fdt = details_DFT.key
+            details_DFT = DetailTemps.objects.get(id=form.detail_fdt.data)
+            detail_frais.detail_fdt = details_DFT
 
         if temps:
-            detail_frais.temps_id = temps.key
+            detail_frais.temps_id = temps
         else:
             temps = Temps()
             temps.user_id = tache.user_id
             temps.date_start = function.datetime_convert(start)
             temps.date_end = function.datetime_convert(end)
-            temps.tache_id = tache.key
-            time = temps.put()
+            temps.tache_id = tache
+            time = temps.save()
             detail_frais.temps_id = time
 
-        detail_frais.put()
+        detail_frais.save()
 
         flash('Enregistrement effectue avec succes', 'success')
         success = True
@@ -303,34 +318,33 @@ def edit(tache_id, detail_frais_id=None):
     return render_template('frais/frais_tache_edit.html', **locals())
 
 
-@prefix_tache.route('/frais/delete/<int:detail_frais_id>')
+@prefix_tache.route('/frais/delete/<objectid:detail_frais_id>')
 @login_required
 def delete(detail_frais_id):
 
     # Information du details des frais du FDT
-    details_temps = DetailFrais.get_by_id(detail_frais_id)
+    details_temps = DetailFrais.objects.get(id=detail_frais_id)
 
     # Recuperation des details des frais correspondant a la meme FDT du frais a supprimer
-    frais_detail_count = DetailFrais.query(
-        details_temps.temps_id == details_temps.temps_id,
-        details_temps.key != details_temps.key
+    frais_detail_count = DetailFrais.objects(
+        Q(temps_id=details_temps.temps_id) & Q(id__ne=details_temps.id)
     )
 
-    temps_detail_count = DetailFrais.query(
-        DetailFrais.temps_id == details_temps.temps_id
+    temps_detail_count = DetailFrais.objects(
+        temps_id = details_temps.temps_id
     )
 
     # id de la feuille de temps de la semaine
-    temps_id = details_temps.temps_id.get().key.id()
+    temps_id = details_temps.temps_id.id
 
     # id de la tache de la semaine
-    tache_id = tache_id = details_temps.temps_id.get().tache_id.get().key.id()
+    tache_id = tache_id = details_temps.temps_id.tache_id.id
 
     # if il n'existe plus de details temps correspondant a la FDT de la semaine, on le supprime.
-    if not frais_detail_count.count() and not temps_detail_count.count():
-        temps = Temps.get_by_id(temps_id)
-        temps.key.delete()
+    if not len(frais_detail_count) and not len(temps_detail_count):
+        temps = Temps.objects.get(id=temps_id)
+        temps.delete()
 
-    details_temps.key.delete()
+    details_temps.delete()
     flash('Suppression reussie', 'success')
     return redirect(url_for('frais_tache.index', tache_id=tache_id))

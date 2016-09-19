@@ -1,8 +1,7 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_budget import Budget, BudgetPrestation, Prestation, ChargeBudget, Charge, ClientBudget, Client
-from ..user.models_user import Users
+from models_budget import Budget, BudgetPrestation, Prestation, ChargeBudget, Charge, ClientBudget, Client, Users
 from forms_budget import FormBudget
 
 prefix = Blueprint('budget', __name__)
@@ -26,8 +25,14 @@ def index():
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
     #liste des budgets collaborateurs
-    users = Users.objects(email__ne='admin@accentcom-cm.com')
+    users = Users.objects(email__ne='admin@accentcom-cm.com').skip(offset).limit(limit)
+    count = Users.objects(email__ne='admin@accentcom-cm.com').count()
 
     time_zones = pytz.timezone('Africa/Douala')
     current_year = datetime.datetime.now(time_zones).year
@@ -55,7 +60,6 @@ def index():
             list_year.append(i)
 
     datas = users
-    datas.paginate(page=page, per_page=10)
 
     # Traitement du tableau des budgets a afficher
     list_budget = []
@@ -89,7 +93,7 @@ def index():
 
         list_budget.append(data)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(users), search=search, record_name='Budget')
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Budget')
 
     return render_template('budget/index.html', **locals())
 
@@ -112,8 +116,14 @@ def valeur():
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
     #liste des budgets collaborateurs
-    users = Users.objects(email__ne='admin@accentcom-cm.com')
+    users = Users.objects(email__ne='admin@accentcom-cm.com').skip(offset).limit(limit)
+    count = Users.objects(email__ne='admin@accentcom-cm.com').count()
 
     time_zones = pytz.timezone('Africa/Douala')
     current_year = datetime.datetime.now(time_zones).year
@@ -144,7 +154,6 @@ def valeur():
     list_budget = []
 
     datas = users
-    datas.paginate(page=page, per_page=10)
 
     for user in datas:
         data = {}
@@ -165,7 +174,7 @@ def valeur():
 
         list_budget.append(data)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(users), search=search, record_name='Budget')
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Budget')
 
 
     return render_template('budget/valeur.html', **locals())
@@ -320,13 +329,19 @@ def charge():
         if i not in list_year:
             list_year.append(i)
 
-    datas = Charge.objects()
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    #liste des budgets collaborateurs
+    datas = Charge.objects().skip(offset).limit(limit)
+    count = Charge.objects().count()
 
     # Traitement du tableau des charges a afficher
     list_charge = []
 
     data_fecth = datas
-    data_fecth.paginate(page=page, per_page=10)
 
     for charge in data_fecth:
         data = {}
@@ -342,7 +357,7 @@ def charge():
 
         list_charge.append(data)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Charges')
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Charges')
 
     return render_template('budget/charge.html', **locals())
 
@@ -427,10 +442,14 @@ def client():
         if i not in list_year:
             list_year.append(i)
 
-    datas = Client.objects(prospect=False)
+    offset = 0
+    limit = 25
+    if page > 1:
+        offset = ((page - 1) * 25)
+    datas = Client.objects(prospect=False).skip(offset).limit(limit)
+    count = Client.objects(prospect=False).count()
 
     data_fecth = datas
-    data_fecth.paginate(page=page, per_page=10)
 
     # Traitement du tableau des charges a afficher
     list_charge = []
@@ -449,7 +468,7 @@ def client():
         list_charge.append(data)
 
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Clients')
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Clients')
 
     return render_template('budget/client.html', **locals())
 

@@ -40,7 +40,7 @@
                                       <td>{{ client.client }}</td>
                                       <td>
                                           {% if client.prospect %}
-                                          {{ client.prospect.get().name }}
+                                          {{ client.prospect.name }}
                                           {% else %}
                                             -
                                           {% endif %}
@@ -120,7 +120,7 @@
                                                      body:[
                                                             [{text:'Code Client', bold:true},{text:'Nom du Client', bold:true},{text:'Prospect', bold:true},{text:'Heure', bold:true}, {text:'Montant', bold:true}],
                                                             {% for client in datas.clients %}
-                                                            ['{{ client.ref_client }}', '{{ client.client }}', '{% if client.prospect %}{{ client.prospect.get().name }}{% else %} - {% endif %}', '{{ client.time }}', '{{ client.montant|format_price() }}'],
+                                                            ['{{ client.ref_client }}', '{{ client.client }}', '{% if client.prospect %}{{ client.prospect.name }}{% else %} - {% endif %}', '{{ client.time }}', '{{ client.montant|format_price() }}'],
                                                             {% endfor %}
                                                             [{ text:'Total', bold:true},'','','','{{ datas.total_gene|format_price() }}']
                                                      ]

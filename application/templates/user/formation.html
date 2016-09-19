@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %} Paramètre Entreprise | {{ super() }}  {% endblock %}
+
+
+{% block layout_content %}
+
+
+    <div class="col-lg-9">
+        <div class="page-header">
+          <h1>Utilisateur : <small>{{ user.first_name }} {{ user.last_name }} </small> <i class="fa fa-power-off pull-right {% if user.logged %} text-success {% else %} text-danger {% endif %}" title="{% if user.logged %} connecte {% else %} deconnecte {% endif %}"></i></h1>
+          {% include 'includes/flash_message.html' %}
+        </div>
+
+        <nav class="navbar navbar-toolbar" role="navigation">
+          <div class="container-fluid">
+            <div class="btn-toolbar" role="toolbar">
+              <div class="btn-group pull-right">
+                <a href="{{ url_for('user_param.hors_projet', user_id=user_id) }}" class="btn btn-primary" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer une formation</a>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <table class="table table-condensed table-hover">
+            <thead>
+            <tr>
+                <th width="35%">Titre</th>
+                <th width="15%">Date début</th>
+                <th width="15%">Nbre d'heure</th>
+                <th width="15%">Nombre de jour</th>
+                <th width="10%">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for data in datas %}
+                    <tr>
+                        <td>{{ data.titre }}</td>
+                        <td> {{ data.date_start|format_date('%d-%m-%Y') }} </td>
+                        <td> {{ data.heure }} </td>
+                        <td> {{ data.heure / 8 }} </td>
+                        <td>
+                            <a href="{{ url_for('user_param.formation_detail', tache_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="glyphicon glyphicon-eye-open"></i></a>
+                            {% if not data.nbr_temps() %}
+                            <a href="{{ url_for('user_param.formation_delete', user_id=user_id, tache_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="glyphicon glyphicon-remove"></i></a>
+                            {% endif %}
+                        </td>
+                   </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <h4 class="text-center">Aucune information</h4>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{ pagination.links }}
+
+
+
+    </div>
+    <div class="col-lg-3">
+        {% include 'includes/nav_user.html' %}
+    </div>
+
+{% endblock %}

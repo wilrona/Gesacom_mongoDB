@@ -34,13 +34,19 @@ def index(prospect=None):
     except ValueError:
         page = 1
 
-    if prospect:
-        datas = Client.objects(prospect=True)
-    else:
-        datas = Client.objects(prospect=False)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Clients')
-    datas.paginate(page=page, per_page=10)
+    if prospect:
+        count = Client.objects(prospect=True).count()
+        datas = Client.objects(prospect=True).skip(offset).limit(limit)
+    else:
+        count = Client.objects(prospect=False).count()
+        datas = Client.objects(prospect=False).skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Clients')
 
     return render_template('client/index.html', **locals())
 
@@ -159,12 +165,19 @@ def contact(client_id, prospect=None):
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Contact.objects(
+        client_id=client.id
+    ).count()
     datas = Contact.objects(
         client_id=client.id
-    )
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Contact')
+    ).skip(offset).limit(limit)
 
-    datas.paginate(page=page, per_page=10)
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Contact')
 
     return render_template('client/contact.html', **locals())
 
@@ -269,9 +282,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Contact.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Contacts')
-    datas.paginate(page=page, per_page=10)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Contact.objects().count()
+    datas = Contact.objects().skip(offset).limit(count)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Contacts')
 
     return render_template('client/contacts.html', **locals())
 

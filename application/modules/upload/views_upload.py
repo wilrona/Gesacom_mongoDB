@@ -269,16 +269,16 @@ def index():
     from ..domaine.models_domaine import Domaine, Service
     for data in result['data']:
         exist_data = Domaine.objects(code=data['code']).first()
-        if exist_data:
-            domaine = Domaine()
-            domaine.code = data['code']
-            domaine.libelle = data['libelle']
-            domaine_id = domaine.save()
+        if not exist_data:
+            doma = Domaine()
+            doma.code = data['code']
+            doma.libelle = data['libelle']
+            domaine_id = doma.save()
 
-            for service in data['services']:
+            for services in data['services']:
                 serv = Service()
-                serv.code = service['code']
-                serv.libelle = service['libelle']
+                serv.code = services['code']
+                serv.libelle = services['libelle']
                 serv.domaine = domaine_id
                 serv.save()
 
@@ -383,14 +383,21 @@ def index():
 
                 bud_pres.save()
 
+    if result['status'] == 200:
+        return 'True'
+    else:
+        return 'False'
 
+
+@prefix.route('/etape2')
+def etape2():
 
     url = "http://accentcom-time.com/api/projet"
     result = urlfetch.get(url)
     result = result.content
     result = json.loads(result)
-
-    from ..projet.models_projet import Projet
+    #
+    from ..projet.models_projet import Projet, Domaine, Client, Service, Users, Frais
     for data in result['data']:
         exist_data = Projet.objects(code=data['code']).first()
         if not exist_data:
@@ -408,7 +415,7 @@ def index():
 
             proj.facturable = data['facturable']
 
-            domaine = Domaine.objects(libelle=data['domaine_id']).first()
+            domaine = Domaine.objects(code=data['domaine_id']).first()
             proj.domaine_id = domaine
 
             client = Client.objects(ref=data['client_id']).first()
@@ -430,7 +437,8 @@ def index():
 
             proj_ = proj.save()
 
-            from ..frais.models_frais import FraisProjet
+            # from ..frais.models_frais import FraisProjet
+            from ..projet.models_projet import FraisProjet
             for frais in data['frais']:
 
                 frais_id = Frais.objects(libelle=frais['frais_id']).first()
@@ -443,12 +451,21 @@ def index():
                 frai.save()
 
 
+    if result['status'] == 200:
+        return 'True'
+    else:
+        return 'False'
+
+
+@prefix.route('/etape3')
+def etape3():
+
     url = "http://accentcom-time.com/api/tache"
     result = urlfetch.get(url)
     result = result.content
     result = json.loads(result)
 
-    from ..tache.models_tache import Tache
+    from ..tache.models_tache import Tache, Projet, Users, Prestation
     from ..temps.models_temps import Temps, DetailTemps
     for data in result['data']:
         taches = Tache()
@@ -456,7 +473,9 @@ def index():
         taches.description = data['description']
         taches.heure = data['heure']
 
-        date_starts = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
+        date_starts = None
+        if data['date_start'] != 'None':
+            date_starts = datetime.datetime.combine(function.date_convert(data['date_start']), datetime.datetime.min.time())
         taches.date_start = date_starts
 
         taches.facturable = data['facturable']
@@ -500,7 +519,9 @@ def index():
                 d.date = date
 
                 d.description = detail['description']
-                d.heure = function.datetime_convert(detail['heure'])
+                d.heure = function.datetime_convert(str('08:00:00'))
+                if detail['heure'] != 'None':
+                    d.heure = function.datetime_convert(detail['heure'])
                 d.jour = detail['jour']
                 d.conversion = detail['conversion']
                 d.temps_id = t_id
@@ -512,3 +533,33 @@ def index():
         return 'True'
     else:
         return 'False'
+
+
+@prefix.route('/reset')
+def reset():
+
+    from ..tache.models_tache import Tache, Projet
+
+    prod = Projet.objects()
+
+    ok = 'False'
+    if prod:
+        for proj in prod:
+            prof = Projet.objects().get(id=proj.id)
+            if prof.code:
+                prof.attente = False
+                prof.rejet = False
+            else:
+                prof.attente = True
+                prof.rejet = False
+            prof.save()
+            ok = 'True Projet'
+
+    tac = Tache.objects()
+    for tach in tac:
+        tache = Tache.objects().get(id=tach.id)
+        tache.officiel = False
+        tache.save()
+        ok = 'True Tache'
+
+    return ok

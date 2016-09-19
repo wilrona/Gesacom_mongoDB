@@ -13,6 +13,7 @@ class Users(db.Document):
     email = db.StringField()
     date_create = db.DateTimeField()
     matricule = db.StringField()
+    categorie = db.StringField()
 
     is_enabled = db.BooleanField()
     first_name = db.StringField()
@@ -136,14 +137,14 @@ class Users(db.Document):
 
         for tache in Tache.objects(user_id=self.id):
             if tache.projet_id and tache.get_projet().facturable and tache.get_projet().id not in List_projet:
-                List_projet.append(tache.get_projet().id)
+                List_projet.append(tache.get_projet())
 
         return List_projet
 
     def valeur_facture(self):
         montant = 0.0
         for projet_id in self.projet_user():
-            ratio = projet_id.ratio_user(self.id)
+            ratio = projet_id.ratio_user(user_id=self.id)
 
             montant_sur_projet = projet_id.montant * ratio
 
@@ -163,6 +164,7 @@ class UserRole(db.Document):
 
     def get_user(self):
         return Users.objects.get(id=self.user_id.id)
+
 
 class Horaire(db.Document):
     date_start = db.DateTimeField()

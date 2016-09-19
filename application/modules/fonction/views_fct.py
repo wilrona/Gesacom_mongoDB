@@ -26,9 +26,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Fonction.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='fonctions')
-    datas.paginate(page=page, per_page=10)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Fonction.objects().count()
+    datas = Fonction.objects().skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='fonctions')
 
     return render_template('fonction/index.html', **locals())
 

@@ -1,8 +1,8 @@
 __author__ = 'Ronald'
 
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
+from flaskext import wtf
+from flaskext.wtf import validators
 from .models_prest import Prestation
 
 def verif_facturable(form, field):

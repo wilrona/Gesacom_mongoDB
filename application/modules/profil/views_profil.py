@@ -26,10 +26,16 @@ def index():
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-    datas = Profil.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='Profils')
-    datas.paginate(page=page, per_page=page)
 
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Profil.objects().count()
+    datas = Profil.objects().skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Profils')
     return render_template('profil/index.html', **locals())
 
 

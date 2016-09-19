@@ -2,7 +2,7 @@ __author__ = 'wilrona'
 
 from flask import request, render_template, flash, url_for, redirect, session, make_response, Response, jsonify, Blueprint
 
-from lib.flask_cache import Cache
+# from lib.flask_cache import Cache
 from application import app
 from flask.ext.login import current_user
 from ..decorators import roles_required, login_required
@@ -19,29 +19,30 @@ import requests
 
 #ajoute des fonts dans mes pdfs
 import os
-import lib.reportlab
+import reportlab
 
 #import pour l'impression des ticket
-from lib.reportlab.pdfgen import canvas
-from lib.reportlab.lib.pagesizes import A5, A4, landscape
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A5, A4, landscape
 # from lib.reportlab.platypus.doctemplate import SimpleDocTemplate
-from lib.reportlab.lib import colors
-from lib.reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.lib.units import cm
 
 
-from lib.reportlab.platypus import Paragraph
-from lib.reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from lib.reportlab.pdfbase import pdfmetrics
-from lib.reportlab.pdfbase.ttfonts import TTFont
-from lib.reportlab.lib.colors import black,white
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.colors import black,white
 
-from lib.reportlab.graphics.barcode import code39, createBarcodeDrawing
+from reportlab.graphics.barcode import code39, createBarcodeDrawing
 
 # Appel de l'ensemble des fonctions crees
 from application import function
 
 # variable pour la gestion automatique des dates en fonction des zones
-from lib.pytz.gae import pytz
+# import pytz
+from pytz.gae import pytz
 
 from itertools import groupby
 from operator import itemgetter
@@ -80,7 +81,10 @@ global_role = [
             {'titre': 'visualisation des infos', 'valeur':'user_infos', 'action': 1},
             {'titre': 'visualisation des permissions', 'valeur':'user_permission', 'action': 1},
             {'titre': 'visualisation des taux horaires', 'valeur':'user_horaire', 'action': 2},
-            {'titre': 'visualisation des budgets ', 'valeur': 'user_budget', 'action': 0}
+            {'titre': 'visualisation des budgets ', 'valeur': 'user_budget', 'action': 0},
+            {'titre': 'visualisation des absences ', 'valeur': 'user_absence', 'action': 0},
+            {'titre': 'visualisation des conges ', 'valeur': 'user_conge', 'action': 0},
+            {'titre': 'visualisation des formations ', 'valeur': 'user_formation', 'action': 0}
         ]
     },
     {'module': 'projets', 'valeur': 'module_projet',
@@ -88,7 +92,10 @@ global_role = [
             {'titre': 'visualisation des projets', 'valeur':'projet', 'action': 2},
             {'titre': 'visualisation des taches des projets', 'valeur':'projet_tache', 'action': 2},
             {'titre': 'visualisation des frais des projets', 'valeur':'projet_frais', 'action': 2},
-            {'titre': 'visualisation des statistiques', 'valeur':'projet_stat', 'action': 0}
+            {'titre': 'visualisation des statistiques', 'valeur':'projet_stat', 'action': 0},
+            {'titre': 'visualisation des demandes de projet', 'valeur':'projet_demande', 'action': 1},
+            {'titre': 'Gestion des besoins financiers des differents projets', 'valeur':'projet_finance', 'action': 0}
+
         ]
     },
     {'module': 'budget', 'valeur': 'module_budget',

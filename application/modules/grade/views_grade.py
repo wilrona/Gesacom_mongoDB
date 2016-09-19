@@ -26,10 +26,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Grade.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='grades')
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
 
-    datas.paginate(page=page, per_page=10)
+    count = Grade.objects().count()
+    datas = Grade.objects().skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='grades')
 
     return render_template('grade/index.html', **locals())
 

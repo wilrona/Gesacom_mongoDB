@@ -1,8 +1,8 @@
 __author__ = 'Ronald'
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
-from lib.flaskext.wtf.html5 import NumberInput
+from flaskext import wtf
+from flaskext.wtf import validators
+from flaskext.wtf.html5 import NumberInput
 from ...modules import *
 from models_tache import Tache
 
@@ -20,7 +20,7 @@ def controle_date_start(form, field):
     #         raise wtf.ValidationError('La date de debut doit etre >= date en cours')
 
     if form.id.data and field.data:
-        date_start = function.datetime_convert(field.data)
+        date_start = datetime.datetime.combine(function.date_convert(field.data), datetime.datetime.min.time())
         tache = Tache.objects.get(id=form.id.data)
         if tache.date_start > date_start:
             raise wtf.ValidationError('La nouvelle date de debut doit etre >= a la date modifie')

@@ -2,8 +2,7 @@ __author__ = 'wilrona'
 
 from ...modules import *
 from application import google_login
-from ..role.models_role import Roles
-from models_user import Users, UserRole, Fonction, Site, Departement, Grade, Horaire
+from models_user import Users, UserRole, Fonction, Site, Departement, Grade, Horaire, Roles
 from ..profil.models_profil import Profil, ProfilRole
 from forms_user import FormUser, FormHoraire
 
@@ -64,7 +63,7 @@ def login(token, userinfo, **params):
                         User_exist.date_last_logged = function.datetime_convert(date_auto_nows)
                         User_exist.date_update = function.datetime_convert(date_auto_nows)
                         User_exist.save()
-                        return redirect(url_for('dashboard.index'))
+                        return redirect(url_for('tache.me'))
                     else:
                         flash("Votre Compte est en attente d'activation de vos parametres. Contactez l'administrateur", 'warning')
                         return redirect(url_for('home.index'))
@@ -103,11 +102,11 @@ def logout():
     return redirect(url_for('home.index'))
 
 
-@prefix_param.route('/user')
+@prefix_param.route('/')
 @login_required
-@roles_required([('super_admin', 'user', 'user_infos', 'user_permmission', 'user_horaire', 'user_budget')])
+@roles_required([('super_admin', 'user')])
 def index():
-    menu = 'societe'
+    menu = 'user'
     submenu = 'users'
     title_page = 'Parametre - Utilisateurs'
 
@@ -119,18 +118,22 @@ def index():
         page = int(request.args.get('page', 1))
     except ValueError:
         page = 1
-    users = Users.objects(email__ne='admin@accentcom-cm.com')
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(users), search=search, record_name='users')
-    users.paginate(page=page, per_page=10)
+
+    limit = 10
+    offset = ((page - 1) * 10)
+
+    count = Users.objects(email__ne='admin@accentcom-cm.com').count()
+    users = Users.objects(email__ne='admin@accentcom-cm.com').skip(offset).limit(limit)
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='users')
 
     return render_template('user/index.html', **locals())
 
 
-@prefix_param.route('/user/infos/<objectid:user_id>', methods=['GET', 'POST'])
+@prefix_param.route('/infos/<objectid:user_id>', methods=['GET', 'POST'])
 @login_required
 @roles_required([('super_admin', 'user_infos')])
 def infos(user_id):
-    menu = 'societe'
+    menu = 'user'
     submenu = 'users'
     context = 'information'
     title_page = 'Parametre - Utilisateurs'
@@ -177,11 +180,12 @@ def infos(user_id):
         user.departement_id = departement
 
         user.matricule = form.matricule.data
+        user.categorie = form.categorie.data
 
         user.is_enabled = True
 
         if form.date_start.data:
-            user.date_start = function.datetime_convert(form.date_start.data)
+            user.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
 
         user.save()
 
@@ -191,11 +195,11 @@ def infos(user_id):
     return render_template('user/infos.html', **locals())
 
 
-@prefix_param.route('/user/permission/<objectid:user_id>', methods=['GET', 'POST'])
+@prefix_param.route('/permission/<objectid:user_id>', methods=['GET', 'POST'])
 @login_required
 @roles_required([('super_admin', 'user_permission')])
 def permission(user_id):
-    menu = 'societe'
+    menu = 'user'
     submenu = 'users'
     context = 'permission'
     title_page = 'Parametre - Utilisateurs'
@@ -210,7 +214,7 @@ def permission(user_id):
 
     # liste des roles lie a l'utiliasteur en cours avec le droit d'edition
     edit = UserRole.objects(Q(user_id=user.id) & Q(edit=True))
-    edit_list = [role.role_id.id() for role in edit]
+    edit_list = [role.role_id.id for role in edit]
 
     # liste des roles lie a l'utiliasteur en cours avec le droit de suppression
     delete = UserRole.objects(Q(user_id=user.id) & Q(deleted=True))
@@ -254,7 +258,7 @@ def permission(user_id):
             profil_id= profil_request.id
         )
 
-        attrib_list = [role.role_id.id() for role in attrib]
+        attrib_list = [role.role_id.id for role in attrib]
 
         # liste des roles lie a l'utiliasteur en cours avec le droit d'edition
         edit = ProfilRole.objects(Q(profil_id=profil_request) & Q(edit=True))
@@ -328,11 +332,11 @@ def permission(user_id):
     return render_template('user/permission.html', **locals())
 
 ###### TRAITEMENT DES TAUX HORAIRES #########
-@prefix_param.route('/user/horaire/<objectid:user_id>')
+@prefix_param.route('/horaire/<objectid:user_id>')
 @login_required
 @roles_required([('super_admin', 'user_horaire')])
 def horaire(user_id):
-    menu = 'societe'
+    menu = 'user'
     submenu = 'users'
     context = 'horaire'
     title_page = 'Parametre - Utilisateurs'
@@ -352,15 +356,20 @@ def horaire(user_id):
     except ValueError:
         page = 1
 
-    datas = Horaire.objects(user=user.id).order_by('-date_start')
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='horaires')
-    datas.paginate(page=page, per_page=10)
+    count = Horaire.objects(user=user.id).order_by('-date_start').count()
+    datas = Horaire.objects(user=user.id).order_by('-date_start').skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='horaires')
 
     return render_template('user/horaire.html', **locals())
 
 
-@prefix_param.route('/user/horaire/edit/<objectid:user_id>', methods=['GET', 'POST'])
+@prefix_param.route('/horaire/edit/<objectid:user_id>', methods=['GET', 'POST'])
 @login_required
 @roles_required([('super_admin', 'user_horaire')], ['edit'])
 def horaire_edit(user_id):
@@ -374,7 +383,7 @@ def horaire_edit(user_id):
 
     if form.validate_on_submit():
 
-        horaire_exist = Horaire.objects(Q(date_start=function.datetime_convert(form.date_start.data)) & Q(user=user.id))
+        horaire_exist = Horaire.objects(Q(date_start=datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())) & Q(user=user.id))
 
         if len(horaire_exist):
             success = False
@@ -385,7 +394,7 @@ def horaire_edit(user_id):
             horaire.user = user
             horaire_id = horaire.save()
 
-            if function.datetime_convert(form.date_start.data) == datetime.date.today():
+            if function.date_convert(form.date_start.data) == datetime.date.today():
                 user.tauxH = float(form.montant.data)
                 user.save()
 
@@ -395,7 +404,7 @@ def horaire_edit(user_id):
     return render_template('user/horaire_edit.html', **locals())
 
 
-@prefix_param.route('/user/horaire/refresh')
+@prefix_param.route('/horaire/refresh')
 def horaire_refresh():
 
     users = Users.objects()
@@ -407,11 +416,11 @@ def horaire_refresh():
         date1 = None
         id = None
         for horaire in horaires:
-            if horaire.date_start <= datetime.date.today():
+            if horaire.date_start.date() <= datetime.date.today():
                 if not date1:
                     date1 = horaire.date_start
                     taux = horaire.montant
-                    id = horaire.key.id()
+                    id = horaire.id
                 else:
                     if date1 < horaire.date_start:
                         date1 = horaire.date_start
@@ -428,7 +437,7 @@ def horaire_refresh():
         return render_template('401.html')
 
 
-@prefix_param.route('/user/horaire/delete/<objectid:horaire_id>/<objectid:user_id>')
+@prefix_param.route('/horaire/delete/<objectid:horaire_id>/<objectid:user_id>')
 @login_required
 @roles_required([('super_admin', 'user_horaire')], ['delete'])
 def delete_horaire(horaire_id, user_id):
@@ -439,9 +448,9 @@ def delete_horaire(horaire_id, user_id):
 
 
 ### TRAITEMENT DES BUDGETS DES UTILISATEURS ###
-@prefix_param.route('/user/budget/<objectid:user_id>')
+@prefix_param.route('/budget/<objectid:user_id>')
 def budget(user_id):
-    menu = 'societe'
+    menu = 'user'
     submenu = 'users'
     context = 'budget'
     title_page = 'Parametre - Utilisateurs'
@@ -450,7 +459,7 @@ def budget(user_id):
 
     user = Users.objects.get(id=user_id)
 
-    budget_user = Budget.objects(user_id=user.id)
+
 
     search = False
     q = request.args.get('q')
@@ -461,10 +470,15 @@ def budget(user_id):
     except ValueError:
         page = 1
 
+    limit = 10
+    offset = ((page - 1) * 10)
+
     list_budget = []
 
+    count = Budget.objects(user_id=user.id).count()
+    budget_user = Budget.objects(user_id=user.id).skip(offset).limit(limit)
+
     datas = budget_user
-    datas.paginate(page=page, per_page=10)
 
     for budget in datas:
         data = {}
@@ -491,6 +505,136 @@ def budget(user_id):
 
         list_budget.append(data)
 
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(budget_user), search=search, record_name='Budget de l\'utilisateur')
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Budget de l\'utilisateur')
 
     return render_template('user/budget.html', **locals())
+
+
+@prefix_param.route('/formation/<objectid:user_id>')
+def formation(user_id):
+
+    menu = 'user'
+    submenu = 'users'
+    context = 'formation'
+    title_page = 'Parametre - Utilisateurs'
+
+    user = Users.objects.get(id=user_id)
+
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    limit = 10
+    offset = ((page - 1) * 10)
+
+    #id Prestatation Ferier, Conge et Absence
+    from ..tache.models_tache import Tache, Prestation
+    prest_formation = Prestation.objects(sigle='FOR').first()
+
+    if prest_formation:
+
+        count = Tache.objects(
+            Q(user_id=user.id) & Q(officiel=True) & Q(prestation_id=prest_formation.id)
+        ).count()
+        datas = Tache.objects(
+            Q(user_id=user.id) & Q(officiel=True) & Q(prestation_id=prest_formation.id)
+        ).skip(offset).limit(limit).order_by('-date_start')
+
+        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Taches Formations')
+
+    else:
+        flash('Demandez a l\'administrateur de configurer au mieux les prestations de l\'application', 'warning')
+        return redirect(url_for('dashboard.index'))
+
+    return render_template('user/formation.html', **locals())
+
+
+@prefix_param.route('/formation/detail/<objectid:tache_id>')
+@login_required
+def formation_detail(tache_id):
+
+    from ..tache.models_tache import Tache
+
+    menu = 'user'
+    submenu = 'users'
+    context = 'formation'
+    title_page = 'Parametre - Utilisateurs'
+
+    tache = Tache.objects.get(id=tache_id)
+
+    return render_template('tache/detail.html', **locals())
+
+
+@prefix_param.route('/formation/edit/<objectid:user_id>', methods=['GET', 'POST'])
+@login_required
+def hors_projet(user_id):
+
+    from ..tache.models_tache import Tache, Projet, Prestation
+    from ..tache.forms_tache import FormTache
+
+    hors_projet = True
+
+
+    taches = Tache()
+    form = FormTache()
+    form.contact.data = None
+
+
+    form.projet_id.choices = [('0', 'Selectionnez un projet')]
+    for projet in Projet.objects(closed=False):
+        form.projet_id.choices.append((str(projet.id), projet.titre))
+
+    utilisateur = Users.objects().get(id=user_id)
+    form.user_id.choices = [(str(utilisateur.id), utilisateur.first_name+" "+utilisateur.last_name)]
+
+    if form.prestation_id.data:
+        prest = Prestation.objects.get(id=form.prestation_id.data)
+        list_factu = {}
+        if prest.nfactu:
+            list_factu[2] = 'Non Facturable'
+        if prest.factu:
+            list_factu[1] = 'Facturable'
+
+
+    list_prestation = Prestation.objects(sigle='FOR')
+
+    success = False
+    if form.validate_on_submit():
+        taches.titre = form.titre.data
+        taches.description = form.description.data
+        taches.heure = form.heure.data
+
+        user = Users.objects.get(id=form.user_id.data)
+        taches.user_id = user
+
+        if form.facturable.data == '2':
+            taches.facturable = False
+        if form.facturable.data == '1':
+            taches.facturable = True
+
+        prestation = Prestation.objects.get(id=form.prestation_id.data)
+        taches.prestation_id = prestation
+
+        taches.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
+        taches.officiel = True
+        taches.save()
+        success = True
+
+    return render_template('user/edit_formation.html', **locals())
+
+
+@prefix_param.route('/formation/delete/<objectid:user_id>/<objectid:tache_id>')
+@login_required
+def formation_delete(user_id, tache_id):
+
+    from ..tache.models_tache import Tache
+
+    taches = Tache.objects.get(id=tache_id)
+    taches.delete()
+
+    return redirect(url_for('user_param.formation', user_id=user_id))

@@ -1,0 +1,77 @@
+
+ <html lang='en'>
+ <head>
+ 	<meta charset='utf-8'>
+ 	<title>{{ title_page }}</title>
+
+     <script type="text/javascript" src="/static/js/pdfmake.js"></script>
+     <script type="text/javascript" src="/static/js/vfs_fonts.js"></script>
+     <script>
+
+          var docDefinition = {
+              pagesize: 'A4',
+              pageOrientation: 'landscape',
+              pageMargins:[30,50,30,30],
+              header: [
+                  {
+                      text: 'Accent Com',
+                      alignment: 'center',
+                      margin:[0, 25, 0, 0]
+                  }
+              ],
+              footer:function(currentPage, pageCount) {
+                  return {
+                      text: currentPage.toString() + ' sur ' + pageCount,
+                      alignment: 'center'
+                  }
+              },
+              content: [
+                  {
+                      text: '{{ title_page }}',
+                      alignment: 'center',
+                      fontSize: 20,
+                      margin:[0, 20, 0, 20]
+                  },
+                  {
+                      table: {
+                            headerRows: 1,
+                            widths: ['*','*','*','*','*','*','*'],
+                            body: [
+                                    [{ text: 'Echeance', bold: true }, { text: 'Commande', bold: true }, { text: 'Montant', bold: true }, { text: 'Avance', bold: true }, { text: 'Solde', bold: true}, { text: 'Fournisseur', bold: true }, { text: 'Projet.', bold: true }],
+                                    {% for datas in analyses %}
+                                       [{text:'{{ datas.date_echeance|format_date('%d-%m-%Y') }}'},'{{ datas.commande }}', '{{ datas.montant|format_price() }}','{{ datas.avance|format_price() }}', '{{ (datas.montant - datas.paye)|format_price() }}', '{{ datas.fournisseur }}', '{{ datas.projet_id.titre }}']
+                                    {% endfor %}
+
+                            ]
+                      },
+                      layout: {
+														hLineWidth: function(i, node) {
+																return (i === 0 || i === node.table.body.length) ? 2 : 1;
+														},
+														vLineWidth: function(i, node) {
+																return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+														},
+														hLineColor: function(i, node) {
+																return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+														},
+														vLineColor: function(i, node) {
+																return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+														}
+														// paddingLeft: function(i, node) { return 4; },
+														// paddingRight: function(i, node) { return 4; },
+														// paddingTop: function(i, node) { return 2; },
+														// paddingBottom: function(i, node) { return 2; }
+						}
+                  }
+              ],
+              defaultStyle: {
+                alignment: 'center'
+              }
+          };
+          pdfMake.createPdf(docDefinition).open();
+     </script>
+ </head>
+ <body>
+
+</body>
+</html>

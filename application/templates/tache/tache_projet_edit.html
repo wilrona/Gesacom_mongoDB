@@ -108,7 +108,7 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
-        {% if tache_id and tache.projet_id and tache.projet_id.responsable_id.id|int == session.get('user_id')|int %}
+        {% if tache_id and tache.projet_id and tache.projet_id.responsable_id.id|string == session.get('user_id')|string %}
             {% if not tache.closed and tache.end %}
                <a href="{{ url_for('tache.closed', tache_id=tache_id) }}" class="btn btn-danger">Cloturer</a>
             {% elif tache.closed and tache.end %}

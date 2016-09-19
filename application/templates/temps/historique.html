@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %} Taches | {{ super() }}  {% endblock %}
+
+
+{% block layout_content %}
+
+
+    <div class="col-lg-9">
+        <div class="page-header">
+          <h1>Historique FDT de la tache : <small>{{ tache.titre }}</small></h1>
+          {% include 'includes/flash_message.html' %}
+        </div>
+        <table class="table table-condensed table-hover">
+            <thead>
+            <tr>
+                <th width="20%">Date</th>
+                <th width="50%">Description</th>
+                <th width="15%">Temps</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for data in datas %}
+                   <tr>
+                    <td>{{ data.date|format_date('%d/%m/%Y') }}</td>
+                    <td>{{ data.description }}</td>
+                    <td>{{ data.heure|format_date('%H:%M') }}</td>
+                  </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <h4 class="text-center">Aucune information</h4>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="col-lg-3">
+        {% include 'includes/nav_tache.html' %}
+    </div>
+
+{% endblock %}

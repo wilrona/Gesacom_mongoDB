@@ -33,29 +33,25 @@
         <table class="table table-condensed table-hover">
             <thead>
             <tr>
-                <th>#</th>
-                <th width="20%">Titre</th>
-                <th width="20%">Projet</th>
                 <th width="10%">Client</th>
-                <th width="15%">Utilisateur</th>
-                <th width="15%">Prestation</th>
-                <th width="15%">Action</th>
+                <th width="30%">Titre</th>
+                <th width="30%">Projet</th>
+                <th width="10%">Utilisateur</th>
+                <th width="10%">Action</th>
             </tr>
             </thead>
             <tbody>
                 {% for data in datas %}
                     {% if data.projet_id %}
                            <tr {% if data.projet_id.suspend %} class="warning" {% endif %}>
-                            <td>{{ loop.index }}</td>
+                            <td>
+                                {{ data.projet_id.code }}
+                            </td>
                             <td>{{ data.titre }}</td>
                             <td>
                                 {{ data.projet_id.titre }}
                             </td>
-                            <td>
-                                {{ data.projet_id.code }}
-                            </td>
                             <td>{{ data.user_id.last_name }}</td>
-                            <td>{{ data.prestation_id.libelle }}</td>
                             <td>
                                 {% if current_user.has_roles([('super_admin', 'tache')], ['edit']) and data.projet_id and not data.end and not data.closed %}
                                     <a href="{{ url_for('tache.edit', tache_id=data.id )}}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
@@ -69,16 +65,14 @@
                           </tr>
                     {% else %}
                     <tr>
-                        <td>{{ loop.index }}</td>
+                        <td>
+                            Aucun
+                        </td>
                         <td>{{ data.titre }}</td>
                         <td>
                             Aucun
                         </td>
-                        <td>
-                            Aucun
-                        </td>
                         <td>{{ data.user_id.last_name }}</td>
-                        <td>{{ data.prestation_id.libelle }}</td>
                         <td>
                             {% if current_user.has_roles([('super_admin', 'tache')], ['edit']) and data.projet_id and not data.end and not data.closed %}
                                 <a href="{{ url_for('tache.edit', tache_id=data.id )}}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
@@ -93,7 +87,7 @@
                     {% endif %}
                 {% else %}
                     <tr>
-                        <td colspan="7">
+                        <td colspan="5">
                             <h4 class="text-center">Aucune information</h4>
                         </td>
                     </tr>

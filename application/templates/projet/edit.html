@@ -20,7 +20,7 @@
                 <button type="button" id="submit" class="btn btn-primary ">Enregistrer</button>
             {% endif %}
             {% if projet_id %}
-                {% if projet.responsable_id.id|int == session.get('user_id')|int %}
+                {% if projet.responsable_id.id|string == session.get('user_id')|string %}
                     {% if projet.suspend and not projet.closed %}
                         <a href="{{ url_for('projet.suspend', projet_id=projet_id) }}" class="btn btn-info">Est suspendu</a>
                     {% elif not projet.suspend and not projet.closed %}
@@ -76,7 +76,7 @@
                       <select name="service_id" class="form-control g-select" id="service">
                         <option value="">Selection du service</option>
                         {% for service in services %}
-                            <option value="{{ service.id }}" {% if form.service_id.data == service.id or form.service_id.data == service.id %} selected {% endif %}>{{ service.libelle }}</option>
+                            <option value="{{ service.id }}" {% if form.service_id.data|string == service.id|string  %} selected {% endif %}>{{ service.libelle }}</option>
                         {% endfor %}
                       </select>
                     {% for message in form.service_id.errors %}

@@ -25,10 +25,14 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Domaine.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='domaines')
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
 
-    datas.paginate(page=page, per_page=10)
+    count = Domaine.objects().count()
+    datas = Domaine.objects().skip(offset).limit(limit)
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='domaines')
 
     return render_template('domaine/index.html', **locals())
 

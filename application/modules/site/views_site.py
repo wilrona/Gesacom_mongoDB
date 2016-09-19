@@ -1,9 +1,8 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_site import Site
+from models_site import Site, Societe
 from forms_site import FormSite
-from ..societe.models_societe import Societe
 
 prefix = Blueprint('site', __name__)
 
@@ -26,9 +25,15 @@ def index():
     except ValueError:
         page = 1
 
-    datas = Site.objects()
-    pagination = Pagination(css_framework='bootstrap3', page=page, total=len(datas), search=search, record_name='sites')
-    datas.paginate(page=page, per_page=10)
+    offset = 0
+    limit = 10
+    if page > 1:
+        offset = ((page - 1) * 10)
+
+    count = Site.objects().count()
+    datas = Site.objects().skip(offset).limit(limit)
+
+    pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='sites')
 
     return render_template('site/index.html', **locals())
 

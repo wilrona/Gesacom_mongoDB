@@ -1,7 +1,7 @@
 __author__ = 'wilrona'
 
-from lib.flaskext import wtf
-from lib.flaskext.wtf import validators
+from flaskext import wtf
+from flaskext.wtf import validators
 from application import function
 import datetime
 
@@ -13,6 +13,7 @@ class FormUser(wtf.Form):
     site_id = wtf.SelectField(label='Selectionez un site :', coerce=str, validators=[validators.Required('Choix obligatoire')])
     departement_id = wtf.SelectField(label='Selectionez un departement :', coerce=str, validators=[validators.Required('Choix obligatoire')])
     date_start = wtf.DateField(label='A commencer le:', format="%d/%m/%Y")
+    categorie = wtf.StringField(label="Categorie :", validators=[validators.Required('Categorie Obligatoire')])
 
 
 # formulaire pour le taux horaire

@@ -3,7 +3,6 @@ __author__ = 'wilrona'
 import re
 import datetime
 from datetime import date, timedelta
-from application import app
 
 from werkzeug.routing import BaseConverter, ValidationError
 from itsdangerous import base64_encode, base64_decode
@@ -55,7 +54,7 @@ def datetime_convert(time): # Convertis time sous la forme YYYY-MM-DD HH:MM:SS
             hour = int(_list[0])
             minute = int(_list[1])
             second = int(_list[2])
-            time = datetime.datetime(100, 1, 1, hour, minute, second)
+            time = datetime.datetime(2000, 1, 1, hour, minute, second)
             return time
 
         except IndexError:
@@ -84,7 +83,13 @@ def date_convert(date):# Convertis date sous la forme YYYY-MM-DD
 
 # jinja 2 formatage de la date
 def format_date(date, format=None):
-    newdate = date.strftime(format)
+    try:
+        newdate = date.strftime(format)
+    except ValueError:
+        dateMin = str(date.minute)
+        if date.minute < 10:
+            dateMin = str(date.minute)+'0'
+        newdate = '0'+str(date.hour)+":"+dateMin
     return newdate
 
 def format_date_month(date, format=None):
@@ -205,11 +210,6 @@ class ObjectIDConverter(BaseConverter):
     def to_url(self, value):
         return base64_encode(value.binary)
 
-app.url_map.converters['objectid'] = ObjectIDConverter
 
-app.jinja_env.filters['format_date'] = format_date
-app.jinja_env.filters['format_date_month'] = format_date_month
-app.jinja_env.filters['add_time'] = add_time
-app.jinja_env.filters['format_price'] = format_price
-app.jinja_env.filters['get_first_day'] = get_first_day
-app.jinja_env.filters['get_last_day'] = get_last_day
+def string(data):
+    return str(data)

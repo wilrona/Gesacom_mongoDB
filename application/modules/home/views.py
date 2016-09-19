@@ -2,6 +2,8 @@ __author__ = 'wilrona'
 
 from ...modules import *
 from application import google_login
+from ..user.models_user import UserRole, Roles
+
 
 prefix = Blueprint('home', __name__)
 
@@ -101,18 +103,15 @@ prefix = Blueprint('home', __name__)
 @prefix.route('/')
 def index():
 
-    from ..role.models_role import Roles
-    from ..user.models_user import UserRole
-
     if 'user_id' in session:
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('tache.me'))
 
     admin_role = Roles.objects(valeur='super_admin').first()
 
-    exist_super_admin = 0
+    exist_super_admin = None
     exist = False
     if admin_role:
-        exist_super_admin = UserRole.objects(role_id= admin_role.id).first()
+        exist_super_admin = UserRole.objects(role_id=admin_role.id).first()
 
 
     google_url = google_login.login_url(

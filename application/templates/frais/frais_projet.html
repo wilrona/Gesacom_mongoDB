@@ -15,7 +15,7 @@
           <div class="container-fluid">
             <div class="btn-toolbar" role="toolbar">
               <div class="btn-group pull-right">
-                <a href="{{ url_for('frais_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if not current_user.has_roles([('super_admin', 'projet_frais')], ['edit']) and not projet.responsable_id.get().key.id() == session.get('user_id')|int %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
+                <a href="{{ url_for('frais_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if not current_user.has_roles([('super_admin', 'projet_frais')], ['edit']) and not projet.responsable_id.id|string == session.get('user_id')|string %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
               </div>
             </div>
           </div>
@@ -36,10 +36,10 @@
                     <td>{{ data.frais_id.libelle }}</td>
                     <td>{{ data.montant|format_price() }}</td>
                     <td>
-                        {% if current_user.has_roles([('super_admin', 'projet_frais')], ['edit']) or projet.responsable_id.id == session.get('user_id')|int %}
+                        {% if current_user.has_roles([('super_admin', 'projet_frais')], ['edit']) or projet.responsable_id.id|string == session.get('user_id')|string %}
                         <a href="{{ url_for('frais_projet.edit', projet_id=projet_id, frais_projet_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
                         {% endif %}
-                        {% if current_user.has_roles([('super_admin', 'projet_frais')], ['delete']) or projet.responsable_id.id == session.get('user_id')|int %}
+                        {% if current_user.has_roles([('super_admin', 'projet_frais')], ['delete']) or projet.responsable_id.id|string == session.get('user_id')|string %}
                         <a href="{{ url_for('frais_projet.delete', frais_projet_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="fa fa-trash"></i></a>
                         {% endif %}
 {#                        <a href="" class="btn btn-link btn-xs btn-xs"><i class="glyphicon glyphicon-eye-open"></i></a>#}

@@ -18,7 +18,7 @@
                   <h2 class="text-center" style="margin-top: 0;">Semaine <small>{{ start|format_date('%d %b %Y') }}</small> au <small>{{ end|format_date('%d %b %Y') }}</small> </h2>
               </div>
               <div class="btn-group pull-right">
-                <a href="{{ url_for('temps_tache.edit', tache_id=tache_id) }}" class="btn btn-primary {% if not tache.user_id.id|int == session.get('user_id')|int or tache.end or tache.closed %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
+                <a href="{{ url_for('temps_tache.edit', tache_id=tache_id) }}" class="btn btn-primary {% if not tache.user_id.id|string == session.get('user_id')|string or tache.end or tache.closed %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
               </div>
             </div>
           </div>
@@ -30,7 +30,7 @@
                 <th width="20%">Date</th>
                 <th width="50%">Description</th>
                 <th width="15%">Temps</th>
-                {% if tache.user_id.id|int == session.get('user_id')|int and not tache.closed and not tache.end %}
+                {% if tache.user_id.id == session.get('user_id') and not tache.closed and not tache.end %}
                 <th width="15%">Action</th>
                 {% endif %}
             </tr>
@@ -41,7 +41,7 @@
                     <td>{{ data.date|format_date('%d/%m/%Y') }}</td>
                     <td>{{ data.description }}</td>
                     <td>{{ data.heure|format_date('%H:%M') }}</td>
-                       {% if tache.user_id.id|int == session.get('user_id')|int and not tache.closed and not tache.end %}
+                       {% if tache.user_id.id == session.get('user_id') and not tache.closed and not tache.end %}
                     <td>
 
                             <a href="{{ url_for('temps_tache.edit', tache_id=tache_id, detail_fdt_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>

@@ -72,7 +72,6 @@ def index():
         offset_end = page * 10
         datas = datas[offset_start:offset_end]
 
-
     return render_template('temps/index.html', **locals())
 
 
@@ -80,8 +79,8 @@ def index():
 @login_required
 def view(date_start, date_end):
 
-    date_start = function.datetime_convert(date_start)
-    date_end = function.datetime_convert(date_end)
+    date_start = datetime.datetime.combine(function.date_convert(date_start), datetime.datetime.min.time())
+    date_end = datetime.datetime.combine(function.date_convert(date_end), datetime.datetime.min.time())
 
     user = Users.objects.get(id=session.get('user_id'))
 
@@ -116,7 +115,7 @@ def view(date_start, date_end):
 @login_required
 def view_day(date):
 
-    date = function.datetime_convert(date)
+    date = datetime.datetime.combine(function.date_convert(date), datetime.datetime.min.time())
 
     day = date.strftime('%d/%m/%Y')
     dt = datetime.datetime.strptime(day, '%d/%m/%Y')
@@ -176,12 +175,18 @@ def index(tache_id):
     except ValueError:
         page = 1
 
+    offset = 0
+    limit = 25
+    if page > 1:
+        offset = ((page - 1) * 25)
+
     datas = []
     pagination = None
     if temps:
-        datas = DetailTemps.objects(temps_id =temps.id).order('-date', '-ordre')
-        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=len(datas), search=search, record_name='Feuille de temps')
-        datas.paginate(page=page, per_page=25)
+        count = DetailTemps.objects(temps_id =temps.id).order('-date', 'ordre').count()
+        datas = DetailTemps.objects(temps_id =temps.id).order('-date', 'ordre').skip(offset).limit(limit)
+        pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Feuille de temps')
+
 
     return render_template('temps/temps_tache.html', **locals())
 
@@ -212,9 +217,9 @@ def edit(tache_id, detail_fdt_id=None):
             Q(tache_id = tache.id) & Q(date_start = start) & Q(date_end = end)
         ).first()
 
-        detail_fdt.date = function.datetime_convert(form.date.data)
+        detail_fdt.date = datetime.datetime.combine(function.date_convert(form.date.data), datetime.datetime.min.time())
         detail_fdt.description = form.description.data
-        detail_fdt.heure = function.time_convert(form.heure.data)
+        detail_fdt.heure = function.datetime_convert(form.heure.data)
 
         time = str(form.heure.data)
         time = time.split(':')
@@ -235,8 +240,8 @@ def edit(tache_id, detail_fdt_id=None):
         else:
             temps = Temps()
             temps.user_id = tache.user_id
-            temps.date_start = function.datetime_convert(start)
-            temps.date_end = function.datetime_convert(end)
+            temps.date_start = datetime.datetime.combine(function.date_convert(start), datetime.datetime.min.time())
+            temps.date_end = datetime.datetime.combine(function.date_convert(end), datetime.datetime.min.time())
             temps.tache_id = tache
             time = temps.save()
             detail_fdt.temps_id = time
@@ -294,9 +299,9 @@ def delete(detail_fdt_id):
     if request.args.get('conge'):
 
         if request.args.get('conge') == '1':
-            return redirect(url_for('conge.temps_absence', prestation_id=tache_id.prestation_id.id))
+            return redirect(url_for('conge.temps_absence', prestation_id=tache_id.user_id.id))
         elif request.args.get('conge') == '2':
-            return redirect(url_for('conge.temps_conge', prestation_id=tache_id.prestation_id.id))
+            return redirect(url_for('conge.temps_conge', prestation_id=tache_id.user_id.id))
 
     else:
         return redirect(url_for('temps_tache.index', tache_id=tache_id))
@@ -308,5 +313,25 @@ def delete(detail_fdt_id):
 @login_required
 def historique(tache_id):
 
-    pass
+    menu = 'tache'
+    submenu = 'tache'
+    context = 'historique'
+    title_page = 'Taches - Details - Feuille de temps - Historique'
+
+    tache = Tache.objects.get(id=tache_id)
+
+    temps_tache = Temps.objects(
+        tache_id=tache.id
+    ).order_by('-date_start')
+
+    datas = []
+    for temps in temps_tache:
+        details = DetailTemps.objects(
+            temps_id = temps.id
+        ).order_by('-date','ordre')
+        for detail in details:
+            datas.append(detail)
+
+
+    return render_template('temps/historique.html', **locals())
 

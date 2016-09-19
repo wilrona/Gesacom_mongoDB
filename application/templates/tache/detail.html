@@ -16,7 +16,7 @@
             <div class="btn-toolbar" role="toolbar">
               <div class="pull-right">
 {#                <a href="{{ url_for('tache.edit', tache_id=tache_id) }}" class="btn btn-primary" data-toggle="modal" data-target="#myModal" data-backdrop="static">Modifier</a>#}
-                {% if tache.user_id.id|int == session.get('user_id')|int %}
+                {% if tache.user_id.id|string == session.get('user_id')|string %}
                     {% if not tache.end and not tache.closed %}
                        <a href="{{ url_for('tache.end', tache_id=tache_id) }}" class="btn btn-danger">Terminer la tache</a>
                     {% elif tache.end and tache.closed %}
@@ -26,7 +26,7 @@
                     {% endif %}
                 {% endif %}
 
-                {% if tache.projet_id and tache.projet_id.responsable_id.id|int == session.get('user_id')|int %}
+                {% if tache.projet_id and tache.projet_id.responsable_id.id|string == session.get('user_id')|string %}
                     {% if not tache.closed and tache.end %}
                        <a href="{{ url_for('tache.closed', tache_id=tache_id) }}" class="btn btn-danger">Cloturer</a>
                     {% elif tache.closed and tache.end %}

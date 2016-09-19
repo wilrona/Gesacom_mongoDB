@@ -15,7 +15,7 @@
           <div class="container-fluid">
             <div class="btn-toolbar" role="toolbar">
               <div class="btn-group pull-right">
-                <a href="{{ url_for('tache_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if (not current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) and not projet.responsable_id.id|int == session.get('user_id')|int) or projet.suspend or projet.closed  %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
+                <a href="{{ url_for('tache_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if (not current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) and not projet.responsable_id.id == session.get('user_id')) or projet.suspend or projet.closed  %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
               </div>
             </div>
           </div>
@@ -40,10 +40,10 @@
                     <td>{{ data.heure }}</td>
                     <td>{{ data.prestation_id.libelle }}</td>
                     <td>
-                        {% if (current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) or projet.responsable_id.id|int == session.get('user_id')|int) and not projet.suspend and not projet.closed %}
+                        {% if (current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) or projet.responsable_id.id == session.get('user_id')) and not projet.suspend and not projet.closed %}
                         <a href="{{ url_for('tache_projet.edit', projet_id=projet_id, tache_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
                         {% endif %}
-                        {% if (current_user.has_roles([('super_admin', 'projet_tache')], ['delete']) or projet.responsable_id.id|int == session.get('user_id')|int) and not projet.suspend and not projet.closed %}
+                        {% if (current_user.has_roles([('super_admin', 'projet_tache')], ['delete']) or projet.responsable_id.id == session.get('user_id')) and not projet.suspend and not projet.closed %}
                         <a href="{{ url_for('tache.delete', tache_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="fa fa-trash"></i></a>
                         {% endif %}
                     </td>

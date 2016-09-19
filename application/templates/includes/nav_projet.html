@@ -1,18 +1,18 @@
 
 <ul class="nav nav-tabs-google nav-stacked myitems" data-spy="affix" data-offset-top="60">
   <li>
-    <a href="{% if not user %} {{ url_for('projet.index') }} {% else %} {{ url_for('projet.me') }} {% endif %}"> Retour à la liste</a>
+    <a href="{% if not user %} {{ url_for('projet.index') }} {% else %} {% if demande %} {{ url_for('projet.index_demande') }} {% else %} {{ url_for('projet.me') }} {% endif %} {% endif %}"> Retour à la liste</a>
   </li>
   <li {% if context == 'information' %} class="active" {% endif %}>
     <a href="{{ url_for('projet.edit', projet_id=projet_id) }}"> Informations</a>
   </li>
-  {% if projet_id %}
-      {% if current_user.has_roles([('super_admin', 'projet_tache')]) or projet.responsable_id.get().key.id() == session.get('user_id')|int %}
+  {% if projet_id and not demande %}
+      {% if current_user.has_roles([('super_admin', 'projet_tache')]) or projet.responsable_id.id|string == session.get('user_id')|string %}
           <li {% if context == 'tache' %} class="active" {% endif %}>
               <a href="{{ url_for('tache_projet.index', projet_id=projet_id) }}"> Taches</a>
           </li>
       {% endif %}
-      {% if current_user.has_roles([('super_admin', 'projet_frais')]) or projet.responsable_id.get().key.id() == session.get('user_id')|int %}
+      {% if current_user.has_roles([('super_admin', 'projet_frais')]) or projet.responsable_id.id|string == session.get('user_id')|string %}
           <li {% if context == 'frais' %} class="active" {% endif %}>
               <a href="{{ url_for('frais_projet.index', projet_id=projet_id) }}"> Frais</a>
           </li>

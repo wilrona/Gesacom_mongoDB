@@ -18,10 +18,11 @@ class Tache(db.Document):
     end = db.BooleanField(default=False)
     closed = db.BooleanField(default=False)
     detail_heure = db.FloatField()
+    officiel = db.BooleanField(default=False)
 
     def prestation_sigle(self):
-        prest = Prestation.objects.get(id=self.prestation_id.id).only('sigle')
-        return prest
+        prest = Prestation.objects.get(id=self.prestation_id.id)
+        return prest.sigle
 
     def get_user(self):
         current_user = Users.objects.get(id=self.user_id.id)
@@ -30,6 +31,15 @@ class Tache(db.Document):
     def get_projet(self):
         current_projet = Projet.objects.get(id=self.projet_id.id)
         return current_projet
+
+    def nbr_temps(self):
+        from ..temps.models_temps import Temps
+
+        nbr_temp = Temps.objects(
+            tache_id = self.id
+        ).count()
+
+        return nbr_temp
 
     # def time_tache(self):
     #     from ..temps.models_temps import Temps, DetailTemps

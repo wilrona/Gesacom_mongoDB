@@ -4,7 +4,7 @@ __author__ = 'Ronald'
 from application import db
 from ..user.models_user import Users
 from ..tache.models_tache import Tache
-from ..frais.models_frais import FraisProjet
+from ..projet.models_projet import FraisProjet
 
 
 class Temps(db.Document):

@@ -1,8 +1,7 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from ..temps.models_temps import DetailTemps, Users
-from ..tache.models_tache import Tache
+from ..temps.models_temps import DetailTemps, Users, Tache
 from ..budget.models_budget import Budget, BudgetPrestation, Prestation, Client
 from ..conge.models_conge import Ferier
 
@@ -104,7 +103,7 @@ def collaborateur():
 
     jour_ferier = [date.date for date in Ferier.objects(Q(apply=True) & Q(date__gte=function.get_first_day(First_day_of_year)) & Q(date__lte=current_day))]
 
-    Nbr_jr_passe = function.networkdays(function.date_convert(function.get_first_day(First_day_of_year)), function.date_convert(current_day), jour_ferier)
+    Nbr_jr_passe = function.networkdays(datetime.datetime.combine(function.get_first_day(First_day_of_year), datetime.datetime.min.time()), datetime.datetime.combine(current_day, datetime.datetime.min.time()), jour_ferier)
     Nbr_heure_passe = Nbr_jr_passe*8
 
 
@@ -316,7 +315,8 @@ def collaborateur_refresh():
             analyse.append(infos)
 
     jour_ferier = [date.date for date in Ferier.objects(Q(apply=True) & Q(date__gte=date_start) & Q(date__lte=date_end))]
-    Nbr_jr_passe = function.networkdays(date_start, date_end, jour_ferier)
+
+    Nbr_jr_passe = function.networkdays(datetime.datetime.combine(date_start, datetime.datetime.min.time()), datetime.datetime.combine(date_end, datetime.datetime.min.time()), jour_ferier)
     Nbr_heure_passe = Nbr_jr_passe*8
 
 
@@ -521,7 +521,7 @@ def collaborateur_export_excel():
 
     jour_ferier = [date.date for date in Ferier.objects(Q(apply=True) & Q(date__gte=date_start) & Q(date__lte=date_end))]
 
-    Nbr_jr_passe = function.networkdays(date_start, date_end, jour_ferier)
+    Nbr_jr_passe = function.networkdays(datetime.datetime.combine(date_start, datetime.datetime.min.time()), datetime.datetime.combine(date_end, datetime.datetime.min.time()), jour_ferier)
     Nbr_heure_passe = Nbr_jr_passe*8
 
 
@@ -924,19 +924,18 @@ def taux_HProd_refresh():
     total_HP_fact = 0.0
     total_pourc_c = 0.0
     total__budget = 0.0
-    for key, grp in groupby(sorted(analyse, key=grouper,reverse=True), grouper):
+    for key, grp in groupby(sorted(analyse, key=grouper, reverse=True), grouper):
 
         temp_dict = dict(zip(["user_id", "user"], key))
+        date_query = datetime.datetime.combine(datetime.date(now_year, 1, 1), datetime.datetime.min.time())
 
         budget = Budget.objects(
-            Q(user_id=temp_dict['user'].id) & Q(date_start=datetime.date(now_year, 1, 1))
+            Q(user_id=temp_dict['user'].id) & Q(date_start=date_query)
         ).first()
 
         if budget:
 
-            prest_prod = Prestation.objects(
-               sigle='PRO'
-            ).first()
+            prest_prod = Prestation.objects(sigle='PRO').first()
 
             budget_prod = BudgetPrestation.objects(
                 Q(budget_id=budget.id) & Q(prestation_id=prest_prod.id)
@@ -951,7 +950,7 @@ def taux_HProd_refresh():
                         [],
                         ()
                     )
-                if date_start > temp_dict['user'].date_start:
+                if datetime.datetime.combine(date_start, datetime.datetime.min.time()) > temp_dict['user'].date_start:
 
                     Nbre_current_day = function.networkdays(
                         function.date_convert(date_start),
@@ -960,7 +959,7 @@ def taux_HProd_refresh():
                         ()
                     )
                 else:
-                    if date_end > temp_dict['user'].date_start:
+                    if datetime.datetime.combine(date_end, datetime.datetime.min.time()) > temp_dict['user'].date_start:
                         Nbre_current_day = function.networkdays(
                             function.date_convert(temp_dict['user'].date_start),
                             function.date_convert(date_end),
@@ -1100,7 +1099,7 @@ def taux_HProd_export_excel():
                         [],
                         ()
                     )
-                if date_start > temp_dict['user'].date_start:
+                if datetime.datetime.combine(date_start, datetime.datetime.min.time()) > temp_dict['user'].date_start:
 
                     Nbre_current_day = function.networkdays(
                         function.date_convert(date_start),
@@ -1109,7 +1108,7 @@ def taux_HProd_export_excel():
                         ()
                     )
                 else:
-                    if date_end > temp_dict['user'].date_start:
+                    if datetime.datetime.combine(date_end, datetime.datetime.min.time()) > temp_dict['user'].date_start:
                         Nbre_current_day = function.networkdays(
                             function.date_convert(temp_dict['user'].date_start),
                             function.date_convert(date_end),
@@ -1438,7 +1437,7 @@ def taux_HDispo_refresh():
                         [],
                         ()
                     )
-                if date_start > temp_dict['user'].date_start:
+                if datetime.datetime.combine(date_start, datetime.datetime.min.time()) > temp_dict['user'].date_start:
 
                     Nbre_current_day = function.networkdays(
                         function.date_convert(date_start),
@@ -1447,7 +1446,7 @@ def taux_HDispo_refresh():
                         ()
                     )
                 else:
-                    if date_end > temp_dict['user'].date_start:
+                    if datetime.datetime.combine(date_end, datetime.datetime.min.time()) > temp_dict['user'].date_start:
                         Nbre_current_day = function.networkdays(
                             function.date_convert(temp_dict['user'].date_start),
                             function.date_convert(date_end),
@@ -1935,7 +1934,7 @@ def etat_conso_refresh():
                         [],
                         ()
                     )
-                if date_start > temp_dict['user'].date_start:
+                if datetime.datetime.combine(date_start, datetime.datetime.min.time()) > temp_dict['user'].date_start:
 
                     Nbre_current_day = function.networkdays(
                         function.date_convert(date_start),
@@ -1944,7 +1943,7 @@ def etat_conso_refresh():
                         ()
                     )
                 else:
-                    if date_end > temp_dict['user'].date_start:
+                    if datetime.datetime.combine(date_end, datetime.datetime.min.time()) > temp_dict['user'].date_start:
                         Nbre_current_day = function.networkdays(
                             function.date_convert(temp_dict['user'].date_start),
                             function.date_convert(date_end),
@@ -3496,7 +3495,7 @@ def taux_mali_global_refresh():
                         [],
                         ()
                     )
-                if date_start > temp_dict['user'].date_start:
+                if datetime.datetime.combine(date_start,datetime.datetime.min.time()) > temp_dict['user'].date_start:
 
                     Nbre_current_day = function.networkdays(
                         function.date_convert(date_start),
@@ -3505,7 +3504,7 @@ def taux_mali_global_refresh():
                         ()
                     )
                 else:
-                    if date_end > temp_dict['user'].date_start:
+                    if datetime.datetime.combine(date_end,datetime.datetime.min.time()) > temp_dict['user'].date_start:
                         Nbre_current_day = function.networkdays(
                             function.date_convert(temp_dict['user'].date_start),
                             function.date_convert(date_end),

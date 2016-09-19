@@ -18,7 +18,7 @@
                                     {% for tache in tache_users %}
                                         <optgroup label="Projet : {{ tache.projet_code }} - {{ tache.projet }}">
                                             {% for ta in tache.taches %}
-                                              <option value="{{ ta.tache_id }}" {% if tache_id == ta.tache_id|int  %} selected {% endif %}>{{ ta.tache }}</option>
+                                              <option value="{{ ta.tache_id }}" {% if tache_id|string == ta.tache_id|string  %} selected {% endif %}>{{ ta.tache }}</option>
                                             {% endfor %}
                                         </optgroup>
                                     {% endfor %}
@@ -60,8 +60,8 @@
                     <td>{{ data.description }}</td>
                     <td>{{ data.heure|format_date('%H:%M') }}</td>
                     <td>
-                        <a href="{{ url_for('temps_tache_breack.temps_breack_edit', tache_id=tache_id, temps_id=tache_temps_id, detail_fdt_id=data.key.id()) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
-                        <a href="{{ url_for('temps_tache_breack.tache_breack_delete', tache_id=tache_id, temps_id=tache_temps_id, detail_fdt_id=data.key.id()) }}" class="btn btn-link btn-xs btn-xs"><i class="fa fa-trash"></i></a>
+                        <a href="{{ url_for('temps_tache_breack.temps_breack_edit', tache_id=tache_id, temps_id=tache_temps_id, detail_fdt_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>
+                        <a href="{{ url_for('temps_tache_breack.tache_breack_delete', tache_id=tache_id, temps_id=tache_temps_id, detail_fdt_id=data.id) }}" class="btn btn-link btn-xs btn-xs"><i class="fa fa-trash"></i></a>
 
                     </td>
                   </tr>
@@ -86,7 +86,7 @@
             {% set count = 0 %}
             {% for data in temps_tache %}
                 {% if count <= 10 %}
-              <a class="list-group-item {% if tache_temps_id and tache_temps_id == data.id_temps|int %} active {% endif %}" href="{{ url_for('temps_tache_breack.temps_breack', tache_id=tache_id, tache_temps_id=data.id_temps) }}">{{ data.date_start|format_date('%d %b %Y') }} au {{ data.date_end|format_date('%d %b %Y') }}</a>
+              <a class="list-group-item {% if tache_temps_id and tache_temps_id|string == data.id_temps|string %} active {% endif %}" href="{{ url_for('temps_tache_breack.temps_breack', tache_id=tache_id, tache_temps_id=data.id_temps) }}">{{ data.date_start|format_date('%d %b %Y') }} au {{ data.date_end|format_date('%d %b %Y') }}</a>
                 {% endif %}
                 {% set count = count + 1 %}
             {% endfor %}
@@ -107,7 +107,7 @@
         $('#submit_tache').on('click', function(e){
             e.preventDefault();
             if($('#input_tache').val() != ""){
-                window.location.replace(window.location.origin+"{{ url_for('temps_tache_breack.temps_breack') }}/"+$('#input_tache').val()).delay();
+                window.location.replace(window.location.origin+"{{ url_for('temps_tache_breack.temps_breack') }}?tache="+$('#input_tache').val()).delay();
             }
         })
     </script>
