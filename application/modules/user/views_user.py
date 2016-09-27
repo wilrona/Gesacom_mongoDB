@@ -574,7 +574,7 @@ def formation_detail(tache_id):
 @login_required
 def hors_projet(user_id):
 
-    from ..tache.models_tache import Tache, Projet, Prestation
+    from ..tache.models_tache import Tache, Projet, Prestation, Update_Tache
     from ..tache.forms_tache import FormTache
 
     hors_projet = True
@@ -620,6 +620,19 @@ def hors_projet(user_id):
         prestation = Prestation.objects.get(id=form.prestation_id.data)
         taches.prestation_id = prestation
 
+        update = Update_Tache()
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+        the_user = Users.objects.get(id=session.get('user_id'))
+
+        update.date = date_now
+        update.user = the_user
+        update.action = 'formation'
+
+        update.notified = True
+
+        taches.updated.append(update)
+
         taches.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
         taches.officiel = True
         taches.save()
@@ -634,7 +647,35 @@ def formation_delete(user_id, tache_id):
 
     from ..tache.models_tache import Tache
 
+
     taches = Tache.objects.get(id=tache_id)
+
+    from ..user.models_user import Update_User
+    userC = Users.objects.get(id=session.get('user_id'))
+
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+
+    save = False
+    for action in taches.notified():
+        if action.notified:
+            dif = date_now - action.date
+            if dif.time().hour >= 1:
+                save = True
+
+    if save:
+        update = Update_User()
+
+        update.date = date_now
+        update.user = str(taches.user_id.id)
+        update.action = 'delete_tache'
+        update.notified = True
+        update.content = taches.titre
+
+        userC.updated.append(update)
+        userC.save()
+
+
     taches.delete()
 
     return redirect(url_for('user_param.formation', user_id=user_id))

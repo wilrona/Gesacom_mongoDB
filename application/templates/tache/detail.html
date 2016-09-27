@@ -21,15 +21,11 @@
                        <a href="{{ url_for('tache.end', tache_id=tache_id) }}" class="btn btn-danger">Terminer la tache</a>
                     {% elif tache.end and tache.closed %}
                         <a class="btn btn-info disabled">Tache Cloturee</a>
-                    {% elif tache.end and not tache.closed %}
-                        <a href="{{ url_for('tache.end', tache_id=tache_id) }}" class="btn btn-warning">En attente de cloture</a>
                     {% endif %}
                 {% endif %}
 
                 {% if tache.projet_id and tache.projet_id.responsable_id.id|string == session.get('user_id')|string %}
-                    {% if not tache.closed and tache.end %}
-                       <a href="{{ url_for('tache.closed', tache_id=tache_id) }}" class="btn btn-danger">Cloturer</a>
-                    {% elif tache.closed and tache.end %}
+                    {% if tache.closed and tache.end %}
                         <a href="{{ url_for('tache.closed', tache_id=tache_id) }}" class="btn btn-warning">Annuler la cloture</a>
                     {% endif %}
                 {% endif %}

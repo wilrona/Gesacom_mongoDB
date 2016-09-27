@@ -4,9 +4,9 @@ from flask import request, render_template, flash, url_for, redirect, session, m
 
 # from lib.flask_cache import Cache
 from application import app
-from flask.ext.login import current_user
+from flask_login import current_user
 from ..decorators import roles_required, login_required
-from flask.ext.paginate import Pagination
+from flask_paginate import Pagination
 
 import hashlib
 import calendar
@@ -51,7 +51,7 @@ from cStringIO import StringIO
 from xhtml2pdf import pisa
 from xlwt import Workbook, easyxf, Font, XFStyle
 
-from application import db
+from application import db, Message, mail
 from mongoengine.queryset.visitor import Q
 
 

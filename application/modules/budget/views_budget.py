@@ -25,10 +25,8 @@ def index():
     except ValueError:
         page = 1
 
-    offset = 0
     limit = 10
-    if page > 1:
-        offset = ((page - 1) * 10)
+    offset = ((page - 1) * 10)
 
     #liste des budgets collaborateurs
     users = Users.objects(email__ne='admin@accentcom-cm.com').skip(offset).limit(limit)
@@ -116,10 +114,8 @@ def valeur():
     except ValueError:
         page = 1
 
-    offset = 0
     limit = 10
-    if page > 1:
-        offset = ((page - 1) * 10)
+    offset = ((page - 1) * 10)
 
     #liste des budgets collaborateurs
     users = Users.objects(email__ne='admin@accentcom-cm.com').skip(offset).limit(limit)
@@ -175,7 +171,6 @@ def valeur():
         list_budget.append(data)
 
     pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Budget')
-
 
     return render_template('budget/valeur.html', **locals())
 
@@ -329,10 +324,8 @@ def charge():
         if i not in list_year:
             list_year.append(i)
 
-    offset = 0
     limit = 10
-    if page > 1:
-        offset = ((page - 1) * 10)
+    offset = ((page - 1) * 10)
 
     #liste des budgets collaborateurs
     datas = Charge.objects().skip(offset).limit(limit)
@@ -400,6 +393,7 @@ def charge_edit():
 
     return redirect(url_for('budget.charge', page=page, year=str(request.form['year'])))
 
+
 @prefix.route('/budget/client')
 @login_required
 @roles_required([('super_admin', 'budget_client')])
@@ -442,10 +436,9 @@ def client():
         if i not in list_year:
             list_year.append(i)
 
-    offset = 0
     limit = 25
-    if page > 1:
-        offset = ((page - 1) * 25)
+    offset = ((page - 1) * 25)
+
     datas = Client.objects(prospect=False).skip(offset).limit(limit)
     count = Client.objects(prospect=False).count()
 
@@ -466,7 +459,6 @@ def client():
             data['montant'] = charg.montant
 
         list_charge.append(data)
-
 
     pagination = Pagination(css_framework='bootstrap3', page=page, total=count, search=search, record_name='Clients')
 

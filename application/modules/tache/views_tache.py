@@ -29,10 +29,8 @@ def index():
     except ValueError:
         page = 1
 
-    offset = 0
     limit = 25
-    if page > 1:
-        offset = ((page - 1) * 25)
+    offset = ((page - 1) * 25)
 
     #id Prestatation Ferier, Conge et Absence
 
@@ -153,6 +151,7 @@ def me():
 @login_required
 @roles_required([('super_admin', 'tache')], ['edit'])
 def edit(tache_id=None):
+    from models_tache import Update_Tache
     hors_projet = False
     if tache_id:
         tache = Tache.objects.get(id=tache_id)
@@ -169,7 +168,6 @@ def edit(tache_id=None):
         tache = Tache()
         form = FormTache()
     form.contact.data = "contact"
-
 
     form.projet_id.choices = [(0, 'Selectionnez un projet')]
     for projet in Projet.objects(closed=False):
@@ -214,13 +212,13 @@ def edit(tache_id=None):
 
         correct = True
         if form.id.data and tache_id:
-            if function.datetime_convert(form.date_start.data) < tache.date_start:
+            if datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time()) < tache.date_start:
                 form.date_start.errors.append('La date de debut ne peut etre anterieure a la precedente')
                 correct = False
             else:
-                tache.date_start = function.datetime_convert(form.date_start.data)
+                tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
         else:
-            tache.date_start = function.datetime_convert(form.date_start.data)
+            tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
 
         ## Controle de la somme des heures par rapport au projet
         if correct:
@@ -230,12 +228,33 @@ def edit(tache_id=None):
             for tache_heure in taches:
                 heure_total += tache_heure.heure
 
-            heure_total += form.heure.data
+            if tache_id:
+                heure_total -= int(form.heure.data)
+            else:
+                heure_total += int(form.heure.data)
+
             heure_restant = heure - heure_total
             if heure_restant < 0:
                 form.heure.errors.append('Heure ventillee superieur a l\'heure total du projet')
             else:
-                tache.put()
+                update = Update_Tache()
+                time_zones = pytz.timezone('Africa/Douala')
+                date_now = datetime.datetime.now(time_zones)
+                the_user = Users.objects.get(id=session.get('user_id'))
+
+                update.date = date_now
+                update.user = the_user
+
+                if tache_id:
+                    update.action = 'modification'
+                else:
+                    update.action = 'creation'
+
+                update.notified = True
+
+                tache.updated.append(update)
+
+                tache.save()
                 success = True
 
     return render_template('tache/edit.html', **locals())
@@ -246,7 +265,10 @@ def edit(tache_id=None):
 @login_required
 @roles_required([('super_admin', 'tache')], ['edit'])
 def hors_projet(tache_id=None):
+
+    from models_tache import Update_Tache
     hors_projet = True
+
     if tache_id:
         tache = Tache.objects.get(id=tache_id)
         form = FormTache(obj=tache)
@@ -308,13 +330,13 @@ def hors_projet(tache_id=None):
 
         correct = True
         if form.id.data and tache_id:
-            if function.datetime_convert(form.date_start.data) < tache.date_start:
+            if datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time()) < tache.date_start:
                 form.date_start.errors.append('La date de debut ne peut etre anterieure a la precedente')
                 correct = False
             else:
-                tache.date_start = function.datetime_convert(form.date_start.data)
+                tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
         else:
-            tache.date_start = function.datetime_convert(form.date_start.data)
+            tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
 
         ## Controle de la somme des heures par rapport au projet
         # if correct:
@@ -330,7 +352,24 @@ def hors_projet(tache_id=None):
         #         form.heure.errors.append('Heure ventillee superieur a l\'heure total du projet')
         #     else:
         if correct:
-            tache.put()
+            update = Update_Tache()
+            time_zones = pytz.timezone('Africa/Douala')
+            date_now = datetime.datetime.now(time_zones)
+            the_user = Users.objects.get(id=session.get('user_id'))
+
+            update.date = date_now
+            update.user = the_user
+
+            if tache_id:
+                update.action = 'modification'
+            else:
+                update.action = 'creation'
+
+            update.notified = True
+
+            tache.updated.append(update)
+
+            tache.save()
             success = True
 
     return render_template('tache/edit.html', **locals())
@@ -351,6 +390,31 @@ def delete(tache_id):
     if feuille_temps:
         flash('Impossible de supprimer l\'element ', 'danger')
     else:
+        from ..user.models_user import Update_User
+        userC = Users.objects.get(id=session.get('user_id'))
+
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+
+        save = False
+        for action in tache.notified():
+            if action.notified:
+                dif = date_now - action.date
+                if dif.time().hour >= 1:
+                    save = True
+
+        if save:
+            update = Update_User()
+
+            update.date = date_now
+            update.user = str(tache.user_id.id)
+            update.action = 'delete_tache'
+            update.notified = True
+            update.content = tache.titre
+
+            userC.updated.append(update)
+            userC.save()
+
         flash('Suppression reussie', 'success')
         tache.delete()
     return redirect(url_for('tache_projet.index', projet_id=projet_id))
@@ -374,45 +438,72 @@ def detail(tache_id):
 @login_required
 def end(tache_id):
 
+    from models_tache import Update_Tache
+
     tache = Tache.objects.get(id=tache_id)
 
+    update = Update_Tache()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+    update.notified = True
+
     if tache.end:
+        update.action = 'modification'
         tache.end = False
         tache.save()
     else:
+        update.action = 'open_end'
         tache.end = True
         if not tache.projet_id:
-            # from ..temps.models_temps import Temps
-            day = datetime.date.today().strftime('%d/%m/%Y')
-            dt = datetime.datetime.strptime(day, '%d/%m/%Y')
-            start = dt - timedelta(days=dt.weekday())
-            end = start + timedelta(days=6)
-
-            temps_count = Temps.objects(
-                Q(date_start=start) & Q(date_end=end) & Q(tache_id=tache.id)
-            )
-
-            if temps_count:
-               flash('Vous ne pouvez pas supprimer cette tache car elle comporte des feuilles de temps', 'warning')
-            else:
-                tache.closed = True
-                tache.save()
-        else:
-
+            tache.updated.append(update)
+            tache.closed = True
             tache.save()
-    return redirect(url_for('tache.detail', tache_id=tache_id))
+        else:
+            tache.updated.append(update)
+            tache.save()
+
+    if tache.officiel:
+        return redirect(url_for('user_param.formation_detail', tache_id=tache.id))
+    else:
+        return redirect(url_for('tache.detail', tache_id=tache_id))
 
 
 @prefix.route('/closed/<objectid:tache_id>')
 @login_required
 def closed(tache_id):
+
+    from models_tache import Update_Tache
+
     tache = Tache.objects.get(id=tache_id)
+
+    update = Update_Tache()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+    update.notified = True
+
     if tache.closed:
+        update.action = 'modification'
         tache.closed = False
+        flash('Modification reussie avec success', 'success')
     else:
+        update.action = 'end_close'
         tache.closed = True
+        flash('Cloture de la tache reussie', 'success')
+
+    tache.updated.append(update)
     tache.save()
-    return redirect(url_for('tache_projet.index', tache_id=tache.projet_id.id))
+    if tache.officiel:
+        return redirect(url_for('user_param.formation_detail', tache_id=tache.id))
+    else:
+        return redirect(url_for('tache.detail', tache_id=tache_id))
 
 
 ## LISTE DES TACHES D'UN PROJET
@@ -433,15 +524,14 @@ def index(projet_id):
     except ValueError:
         page = 1
 
-    offset = 0
+
     limit = 25
-    if page > 1:
-        offset = ((page - 1) * 25)
+    offset = ((page - 1) * 25)
 
     projet = Projet.objects.get(id=projet_id)
 
-    count = Tache.objects(projet_id= projet.id).count()
-    datas = Tache.objects(projet_id= projet.id).skip(offset).limit(limit)
+    count = Tache.objects(projet_id=projet.id).count()
+    datas = Tache.objects(projet_id=projet.id).skip(offset).limit(limit)
 
     pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Taches')
 
@@ -453,7 +543,7 @@ def index(projet_id):
 @prefix_projet.route('/tache/edit/<objectid:projet_id>/<objectid:tache_id>', methods=['GET', 'POST'])
 @login_required
 def edit(projet_id, tache_id=None):
-
+    from models_tache import Update_Tache
     projet = Projet.objects.get(id=projet_id)
 
     if tache_id:
@@ -510,13 +600,13 @@ def edit(projet_id, tache_id=None):
 
         correct = True
         if form.id.data and tache_id:
-            if function.datetime_convert(form.date_start.data) < tache.date_start:
+            if datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time()) < tache.date_start:
                 form.date_start.errors.append('La date de debut ne peut etre anterieure a la precedente')
                 correct = False
             else:
-                tache.date_start = function.datetime_convert(form.date_start.data)
+                tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
         else:
-            tache.date_start = function.datetime_convert(form.date_start.data)
+            tache.date_start = datetime.datetime.combine(function.date_convert(form.date_start.data), datetime.datetime.min.time())
 
         ## Controle de la somme des heures par rapport au projet
         if correct:
@@ -531,6 +621,23 @@ def edit(projet_id, tache_id=None):
             if heure_restant < 0:
                 form.heure.errors.append('Heure ventillee superieur a l\'heure total du projet' + str(heure_restant))
             else:
+                update = Update_Tache()
+                time_zones = pytz.timezone('Africa/Douala')
+                date_now = datetime.datetime.now(time_zones)
+                the_user = Users.objects.get(id=session.get('user_id'))
+
+                update.date = date_now
+                update.user = the_user
+
+                if tache_id:
+                    update.action = 'modification'
+                else:
+                    update.action = 'creation'
+
+                update.notified = True
+
+                tache.updated.append(update)
+
                 tache.save()
                 success = True
 
@@ -595,6 +702,14 @@ def montant_projet_fdt():
 
         projet.montant_projet_fdt = total
         projet.save()
+
+    msg = Message()
+    msg.recipients = ["ronald@accentcom-cm.com"]
+    msg.subject = 'Notification FDT'
+    msg.sender = ('Application FDT', 'no_reply@accentcom.agency')
+
+    msg.html = render_template('mail/notification_mail.html')
+    mail.send(msg)
 
     return render_template('401.html')
 

@@ -6,7 +6,7 @@ from ...modules import *
 from ..tache.models_tache import Tache, Projet, Users
 from ..client.models_client import Client
 from ..domaine.models_domaine import Domaine, Service
-from models_projet import FraisProjet
+from models_projet import FraisProjet, Update_Projet
 from forms_projet import FormProjet
 
 prefix = Blueprint('projet', __name__)
@@ -61,7 +61,6 @@ def index():
     return render_template('projet/index.html', **locals())
 
 
-
 @prefix.route('/demande')
 @login_required
 @roles_required([('super_admin', 'projet_demande')])
@@ -83,11 +82,8 @@ def index_demande():
 
     count = Projet.objects(Q(attente=True) & Q(rejet=False)).count()
 
-    offset = 0
     limit = 25
-    if page > 1:
-        offset = ((page - 1) * 25)
-
+    offset = ((page - 1) * 25)
 
     datas = Projet.objects(Q(attente=True) & Q(rejet=False)).skip(offset).limit(limit)
 
@@ -101,6 +97,7 @@ def index_demande():
     pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Projets')
 
     return render_template('projet/index_demande.html', **locals())
+
 
 @prefix.route('/me')
 def me():
@@ -150,10 +147,10 @@ def me():
                 Q(closed=False) & Q(suspend=True)
             )
 
-            count = Projet.objects(Q(closed=True) & Q(suspend=False) & Q(responsable_id=user.id)).count()
+            count = Projet.objects(Q(closed=False) & Q(suspend=True) & Q(responsable_id=user.id)).count()
 
             responsable = Projet.objects(
-                Q(closed=True) & Q(suspend=False) & Q(responsable_id=user.id)
+                Q(closed=False) & Q(suspend=True) & Q(responsable_id=user.id)
             ).skip(offset).limit(limit)
 
             small_title = 'en suspend'
@@ -162,11 +159,11 @@ def me():
             en_cours = Projet.objects(
                  Q(closed=True) & Q(suspend=False)
             )
-            count = Projet.objects(Q(closed=False) & Q(suspend=True) & Q(responsable_id=user.id)).count()
+            count = Projet.objects(Q(closed=True) & Q(suspend=False) & Q(responsable_id=user.id)).count()
 
 
             responsable = Projet.objects(
-                Q(closed=False) & Q(suspend=True) & Q(responsable_id=user.id)
+                Q(closed=True) & Q(suspend=False) & Q(responsable_id=user.id)
             ).skip(offset).limit(limit)
 
             small_title = 'clotures'
@@ -213,7 +210,7 @@ def edit(projet_id=None):
             form.responsable_id.data = str(projet.responsable_id.id)
             if projet.prospect_id:
                 form.prospect_id.data = str(projet.prospect_id.id)
-            form.id.data = projet_id
+            form.id.data = str(projet_id)
 
     else:
         projet = Projet()
@@ -286,6 +283,24 @@ def edit(projet_id=None):
             projet.facturable = form.facturable.data
 
         projet.closed = form.closed.data
+
+        update = Update_Projet()
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+        the_user = Users.objects.get(id=session.get('user_id'))
+
+        update.date = date_now
+        update.user = the_user
+
+        if projet_id:
+            update.action = 'modification'
+        else:
+            update.action = 'creation'
+
+        update.notified = True
+
+        projet.updated.append(update)
+
 
         projet_id = projet.save()
         flash('Enregistrement effectue avec succes', 'success')
@@ -396,7 +411,28 @@ def edit_demande(projet_id=None):
         projet.closed = form.closed.data
 
         projet.attente = True
+
+
+        update = Update_Projet()
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+        the_user = Users.objects.get(id=session.get('user_id'))
+
+        update.date = date_now
+        update.user = the_user
+
+        if projet_id:
+            if projet.rejet:
+                update.action = 'relance_demande'
+            else:
+                update.action = 'modification_demande'
+        else:
+            update.action = 'creation_demande'
+
+        update.notified = True
+
         projet.rejet = False
+        projet.updated.append(update)
 
         projet_id = projet.save()
         flash('Enregistrement effectue avec succes', 'success')
@@ -409,14 +445,25 @@ def edit_demande(projet_id=None):
 def valide_demande(projet_id):
     projet = Projet.objects.get(id=projet_id)
 
-    if projet.attente:
-        projet_client = Projet.objects(
-                Q(client_id=projet.client_id.id) & Q(code__ne=None)
-        )
-        projet.code = projet.client_id.ref+""+str(len(projet_client)+1)
-        projet.attente = False
-    else:
-        projet.attente = True
+    update = Update_Projet()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+
+    projet_client = Projet.objects(
+            Q(client_id=projet.client_id.id) & Q(code__ne=None)
+    )
+    projet.code = projet.client_id.ref+""+str(len(projet_client)+1)
+    projet.attente = False
+    update.action = 'valide_demande'
+
+
+    update.notified = True
+
+    projet.updated.append(update)
     projet.save()
     flash('Projet validee avec success', 'success')
 
@@ -427,13 +474,26 @@ def valide_demande(projet_id):
 def rejet_demande(projet_id):
     projet = Projet.objects.get(id=projet_id)
 
+    update = Update_Projet()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+
     if projet.rejet:
         projet.attente = True
         projet.rejet = False
+        update.action = 'rejet_attente_demande'
     else:
         projet.rejet = True
         projet.attente = False
+        update.action = 'attente_rejet_demande'
 
+    update.notified = True
+
+    projet.updated.append(update)
     projet.save()
     flash('Projet rejete avec success', 'success')
 
@@ -445,8 +505,22 @@ def closed(projet_id):
     projet = Projet.objects.get(id=projet_id)
 
     if projet.closed:
+
+        update = Update_Projet()
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+        the_user = Users.objects.get(id=session.get('user_id'))
+
+        update.date = date_now
+        update.user = the_user
+        update.action = 'modification'
+
+        update.notified = True
+
+        projet.updated.append(update)
         projet.closed = False
         projet.save()
+
     else:
         tache_exist = Tache.objects(
             projet_id == projet.id
@@ -457,8 +531,22 @@ def closed(projet_id):
         )
 
         if len(tache_closed) == len(tache_exist):
+
+            update = Update_Projet()
+            time_zones = pytz.timezone('Africa/Douala')
+            date_now = datetime.datetime.now(time_zones)
+            the_user = Users.objects.get(id=session.get('user_id'))
+
+            update.date = date_now
+            update.user = the_user
+            update.action = 'open_close'
+
+            update.notified = True
+
+            projet.updated.append(update)
             projet.closed = True
             projet.save()
+            flash('Cloture du projet reussie', 'success')
         else:
             flash('Impossible de cloturer ce projet car il y\'a des taches non cloturees existantes', 'warning')
 
@@ -470,10 +558,34 @@ def suspend(projet_id):
 
     projet = Projet.objects.get(id=projet_id)
 
+    update = Update_Projet()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+
     if projet.suspend:
+        update.action = 'modification'
         projet.suspend = False
+
+        taches = Tache.objects(projet_id=projet.id)
+        for tache in taches:
+            tache.suspend = False
+            tache.save()
     else:
+        update.action = 'open_suspend'
         projet.suspend = True
+
+        taches = Tache.objects(projet_id=projet.id)
+        for tache in taches:
+            tache.suspend = True
+            tache.save()
+
+    update.notified = True
+
+    projet.updated.append(update)
     projet.save()
 
     return redirect(url_for('projet.edit', projet_id=projet_id))
@@ -494,9 +606,34 @@ def delete(projet_id):
         projet_id=projet.id
     )
 
-    if frais or tache:
+    if len(frais) or len(tache):
         flash('Impossible de supprimer le projet '+ str(projet.code), 'danger')
     else:
+        from ..user.models_user import Update_User
+        userC = Users.objects.get(id=session.get('user_id'))
+
+        time_zones = pytz.timezone('Africa/Douala')
+        date_now = datetime.datetime.now(time_zones)
+
+        save = False
+        for action in projet.notified():
+            if action.notified:
+                dif = date_now - action.date
+                if dif.time().hour >= 1:
+                    save = True
+
+        if save:
+            update = Update_User()
+
+            update.date = date_now
+            update.user = str(projet.responsable_id.id)
+            update.action = 'delete_projet'
+            update.notified = True
+            update.content = projet.titre
+
+            userC.updated.append(update)
+            userC.save()
+
         flash('Suppression effectue avec succes', 'success')
         projet.delete()
     return redirect(url_for('projet.index'))

@@ -8,6 +8,14 @@ from ..fonction.models_fct import Fonction
 from ..grade.models_grade import Grade
 
 
+class Update_User(db.EmbeddedDocument):
+    date = db.DateTimeField()
+    action = db.StringField()
+    content = db.StringField()
+    user = db.StringField()
+    notified = db.BooleanField(default=True)
+
+
 class Users(db.Document):
 
     email = db.StringField()
@@ -30,6 +38,8 @@ class Users(db.Document):
 
     tauxH = db.FloatField()
     date_start = db.DateTimeField()
+
+    updated = db.ListField(db.EmbeddedDocumentField(Update_User))
 
     def is_active(self):
         return self.is_enabled

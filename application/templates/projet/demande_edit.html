@@ -17,7 +17,7 @@
         <div class="btn-toolbar" role="toolbar">
           <div class="pull-right">
             {% if not projet_id or projet.rejet %}
-                <button type="button" id="submit" class="btn btn-primary ">Enregistrer</button>
+                <button type="button" id="submit" class="btn btn-primary ">Enregistrer {% if projet.rejet %} et relancer {% endif %}</button>
             {% endif %}
 
             {% if projet_id and projet.attente and not projet.rejet and current_user.has_roles([('super_admin', 'projet_demande')], ['edit']) %}
@@ -30,14 +30,16 @@
                     {% else %}
                         <a href="" class="btn btn-default disabled">Demande rejetée</a>
                     {% endif %}
+                    {% if projet.rejet %}
+                    <a href="{{ url_for('projet.rejet_demande', projet_id=projet_id) }}" class="btn btn-danger">Relancer la demande</a>
+                    {% endif %}
                 {% endif %}
                 {% if current_user.has_roles([('super_admin', 'projet_demande')], ['edit']) %}
                     {% if not projet.rejet %}
-                        <a href="{{ url_for('projet.rejet_demande', projet_id=projet_id) }}" class="btn btn-warning">Rejeté la demande</a>
-                    {% else %}
-                        <a href="{{ url_for('projet.rejet_demande', projet_id=projet_id) }}" class="btn btn-danger">Relancé la demande</a>
+                        <a href="{{ url_for('projet.rejet_demande', projet_id=projet_id) }}" class="btn btn-warning">Rejeter la demande</a>
                     {% endif %}
                 {% endif %}
+
             {% endif %}
 
           </div>
@@ -45,7 +47,13 @@
       </div>
     </nav>
 
-    <form role="form" class="form-horizontal" id="formulaire" action="{{ url_for('projet.edit_demande', projet_id=projet_id) }} "method="post" >
+    {% if projet.rejet %}
+        {% set relance = '1' %}
+    {% else %}
+        {% set relance = None %}
+    {% endif %}
+
+    <form role="form" class="form-horizontal" id="formulaire" action="{{ url_for('projet.edit_demande', projet_id=projet_id, relance=relance) }} "method="post" >
 
             {{ form.hidden_tag() }}
         <div class="row">

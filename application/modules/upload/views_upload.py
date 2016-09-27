@@ -559,6 +559,7 @@ def reset():
     for tach in tac:
         tache = Tache.objects().get(id=tach.id)
         tache.officiel = False
+        tache.suspend = False
         tache.save()
         ok = 'True Tache'
 

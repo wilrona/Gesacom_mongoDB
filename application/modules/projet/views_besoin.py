@@ -1,7 +1,7 @@
 __author__ = 'Ronald'
 
 from ...modules import *
-from models_projet import BesoinFinancier, Projet, Users
+from models_projet import BesoinFinancier, Projet, Users, Update_Besoin
 from forms_projet import FormBesoin
 
 prefix_besoin = Blueprint('besoin', __name__)
@@ -79,6 +79,19 @@ def validation(besoin_id):
     besoin = BesoinFinancier.objects.get(id=besoin_id)
     besoin.attente = False
     besoin.rejet = False
+
+    update = Update_Besoin()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+    update.action = 'valide_besoin'
+    update.notified = True
+
+    besoin.updated.append(update)
+
     besoin.save()
 
     flash('Validation effectue avec succes', 'success')
@@ -92,6 +105,19 @@ def rejet(besoin_id):
     besoin = BesoinFinancier.objects.get(id=besoin_id)
     besoin.attente = False
     besoin.rejet = True
+
+    update = Update_Besoin()
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+    the_user = Users.objects.get(id=session.get('user_id'))
+
+    update.date = date_now
+    update.user = the_user
+    update.action = 'rejet_besoin'
+    update.notified = True
+
+    besoin.updated.append(update)
+
     besoin.save()
 
     flash('Rejet effectue avec succes', 'success')
@@ -187,6 +213,7 @@ def edit_user(besoin_id=None):
     if form.validate_on_submit():
 
         if not solde:
+
             besoin.commande = form.commande.data
             besoin.avance = float(form.avance.data)
             besoin.montant = float(form.montant.data)
@@ -200,9 +227,23 @@ def edit_user(besoin_id=None):
             proj = Projet.objects.get(id=form.projet_id.data)
             besoin.projet_id = proj
 
+            update = Update_Besoin()
+            time_zones = pytz.timezone('Africa/Douala')
+            date_now = datetime.datetime.now(time_zones)
+            the_user = Users.objects.get(id=session.get('user_id'))
+
+            update.date = date_now
+            update.user = the_user
+            update.action = 'creation_besoin'
+
             if relance:
                 besoin.attente = True
                 besoin.rejet = False
+                update.action = 'relance_besoin'
+
+            update.notified = True
+
+            besoin.updated.append(update)
 
             besoin.date_echeance = datetime.datetime.combine(function.date_convert(form.date_echeance.data), datetime.datetime.min.time())
             besoin.save()
@@ -226,6 +267,20 @@ def edit_user(besoin_id=None):
             besoin_new.projet_id = proj
             besoin_new.attente = True
             besoin_new.rejet = False
+
+            update = Update_Besoin()
+            time_zones = pytz.timezone('Africa/Douala')
+            date_now = datetime.datetime.now(time_zones)
+            the_user = Users.objects.get(id=session.get('user_id'))
+
+            update.date = date_now
+            update.user = the_user
+            update.action = 'solde_besoin'
+
+            update.notified = True
+
+            besoin_new.updated.append(update)
+
             besoin_new.date_echeance = datetime.datetime.combine(function.date_convert(form.date_echeance.data), datetime.datetime.min.time())
             besoin_new.save()
             success = True
@@ -244,6 +299,31 @@ def delete_user(besoin_id):
         parent_besoin = BesoinFinancier.objects.get(id=besoin.parent)
         parent_besoin.last_child = True
         parent_besoin.save()
+
+    from ..user.models_user import Update_User
+    userC = Users.objects.get(id=session.get('user_id'))
+
+    time_zones = pytz.timezone('Africa/Douala')
+    date_now = datetime.datetime.now(time_zones)
+
+    save = False
+    for action in besoin.notified():
+        if action.notified:
+            dif = date_now - action.date
+            if dif.time().hour >= 1:
+                save = True
+
+    if save:
+        update = Update_User()
+
+        update.date = date_now
+        update.user = str(besoin.projet_id.responsable_id.id)
+        update.action = 'delete_besoin'
+        update.notified = True
+        update.content = besoin.commande+' au fournisseur '+besoin.fournisseur
+
+        userC.updated.append(update)
+        userC.save()
 
     besoin.delete()
     flash('Suppression effectue avec succes', 'success')

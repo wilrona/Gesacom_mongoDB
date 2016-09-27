@@ -8,6 +8,13 @@ from ..user.models_user import Users
 from ..frais.models_frais import Frais
 
 
+class Update_Projet(db.EmbeddedDocument):
+    date = db.DateTimeField()
+    action = db.StringField()
+    user = db.ReferenceField(Users)
+    notified = db.BooleanField(default=True)
+
+
 class Projet(db.Document):
     code = db.StringField()
     titre = db.StringField()
@@ -26,6 +33,7 @@ class Projet(db.Document):
     montant_projet_fdt = db.FloatField()
     attente = db.BooleanField(default=False)
     rejet = db.BooleanField(default=False)
+    updated = db.ListField(db.EmbeddedDocumentField(Update_Projet))
 
     def ratio_user(self, user_id):
         from ..tache.models_tache import Tache, Users
@@ -71,12 +79,27 @@ class Projet(db.Document):
                     besoin.append(bes)
         return besoin
 
+    def notified(self):
+        data = []
+        for notifie in self.updated:
+            if notifie.notified:
+                data.append(notifie)
+
+        return data
+
 
 class FraisProjet(db.Document):
     montant = db.FloatField()
     facturable = db.BooleanField()
     projet_id = db.ReferenceField(Projet)
     frais_id = db.ReferenceField(Frais)
+
+
+class Update_Besoin(db.EmbeddedDocument):
+    date = db.DateTimeField()
+    action = db.StringField()
+    user = db.ReferenceField(Users)
+    notified = db.BooleanField(default=True)
 
 
 class BesoinFinancier(db.Document):
@@ -91,6 +114,7 @@ class BesoinFinancier(db.Document):
     rejet = db.BooleanField(default=False)
     parent = db.ReferenceField('self')
     last_child = db.BooleanField(default=False)
+    updated = db.ListField(db.EmbeddedDocumentField(Update_Besoin))
 
     def child(self):
         childs = BesoinFinancier.objects(parent=self.id)
@@ -99,3 +123,11 @@ class BesoinFinancier(db.Document):
     def lasted_child(self):
         last = BesoinFinancier.objects(Q(parent=self.id) & Q(last_child=True)).first()
         return last
+
+    def notified(self):
+        data = []
+        for notifie in self.updated:
+            if notifie.notified:
+                data.append(notifie)
+
+        return data

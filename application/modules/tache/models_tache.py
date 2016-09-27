@@ -6,6 +6,13 @@ from ..projet.models_projet import Projet, Users
 from ..prestation.models_prest import Prestation
 
 
+class Update_Tache(db.EmbeddedDocument):
+    date = db.DateTimeField()
+    action = db.StringField()
+    user = db.ReferenceField(Users)
+    notified = db.BooleanField(default=True)
+
+
 class Tache(db.Document):
     titre = db.StringField()
     description = db.StringField()
@@ -19,6 +26,8 @@ class Tache(db.Document):
     closed = db.BooleanField(default=False)
     detail_heure = db.FloatField()
     officiel = db.BooleanField(default=False)
+    suspend = db.BooleanField(default=False)
+    updated = db.ListField(db.EmbeddedDocumentField(Update_Tache))
 
     def prestation_sigle(self):
         prest = Prestation.objects.get(id=self.prestation_id.id)
@@ -41,17 +50,13 @@ class Tache(db.Document):
 
         return nbr_temp
 
-    # def time_tache(self):
-    #     from ..temps.models_temps import Temps, DetailTemps
-    #
-    #     time_taches = []
-    #
-    #     for temps in Temps.query(Temps.tache_id == self.key):
-    #         details = DetailTemps.query(
-    #             DetailTemps.temps_id == temps.key
-    #         )
-    #         for detail in details:
-    #             time_taches.append(detail)
-    #
-    #     return time_taches
+    def notified(self):
+        data = []
+        for notifie in self.updated:
+            if notifie.notified:
+                data.append(notifie)
+
+        return data
+
+
 
