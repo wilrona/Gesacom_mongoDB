@@ -166,13 +166,13 @@
                                 {% if current_user.has_roles([('super_admin', 'budget_userH')]) %}
                                     <li><a href="{{ url_for('budget.index') }}">Budget</a></li>
                                 {% endif %}
-                                {% if current_user.has_roles([('budget_userV')]) and not current_user.has_roles([('budget_userH')]) %}
+                                {% if current_user.has_roles(['budget_userV']) and not current_user.has_roles(['budget_userH']) %}
                                     <li><a href="{{ url_for('budget.valeur') }}">Budget</a></li>
                                 {% endif %}
-                                {% if current_user.has_roles([('budget_charge')]) and not current_user.has_roles([('budget_userH', 'budget_userV')]) %}
+                                {% if current_user.has_roles(['budget_charge']) and not current_user.has_roles([('budget_userH', 'budget_userV')]) %}
                                     <li><a href="{{ url_for('budget.charge') }}">Budget</a></li>
                                 {% endif %}
-                                {% if current_user.has_roles([('budget_client')]) and not current_user.has_roles([('budget_userH', 'budget_userV', 'budget_charge')]) %}
+                                {% if current_user.has_roles(['budget_client']) and not current_user.has_roles([('budget_userH', 'budget_userV', 'budget_charge')]) %}
                                     <li><a href="{{ url_for('budget.client') }}">Budget</a></li>
                                 {% endif %}
 
@@ -183,7 +183,28 @@
                             </ul>
                           </div>
                        {% endif %}
-                       <a href="{{ url_for('societe.index') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% if current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) and not current_user.has_roles([('super_admin', 'ferier')]) and not current_user.has_roles([('budget_client', 'budget_userH', 'budget_userV', 'budget_charge')]) and not current_user.has_roles([('super_admin', 'profil')]) %}
+                            <a href="{{ url_for('societe.index') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('budget_userH', 'budget_userV', 'budget_charge')]) and not current_user.has_roles([('super_admin', 'ferier')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('profil.index') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles([('super_admin', 'budget_userH')]) and not current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('budget.index') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles(['budget_userV']) and not current_user.has_roles(['budget_userH']) and not current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('budget.valeur') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles(['budget_charge']) and not current_user.has_roles([('budget_userH', 'budget_userV')]) and not current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('budget.charge') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles(['budget_client']) and not current_user.has_roles([('budget_userH', 'budget_userV', 'budget_charge')]) and not current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('budget.client') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+                        {% if current_user.has_roles(['budget_client']) and not current_user.has_roles([('budget_client', 'budget_userH', 'budget_userV', 'budget_charge')]) and not current_user.has_roles([('super_admin', 'profil')]) and not current_user.has_roles([('super_admin', 'site', 'entreprise', 'departement', 'fonction', 'grade', 'frais', 'domaine', 'ligne', 'prestation', 'charge')]) %}
+                            <a href="{{ url_for('ferier.jour_ferier') }}"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Param&egrave;tres<span class="sr-only"></span></a>
+                        {% endif %}
+
                     </div>
                  </li>
                  {% if menu == 'societe' %}

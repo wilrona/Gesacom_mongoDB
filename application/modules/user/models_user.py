@@ -76,7 +76,7 @@ class Users(db.Document):
                         if accesibles and role_name != 'super_admin':
                             role = Roles.objects(valeur=role_name).first()
 
-                            role_user = UserRole.query(Q(user_id=self.id) & Q(role_id=role.id)).first()
+                            role_user = UserRole.objects(Q(user_id=self.id) & Q(role_id=role.id)).first()
 
                             for accesible in accesibles:
                                 if accesible == 'edit' and not role_user.edit:

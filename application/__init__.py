@@ -44,10 +44,10 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))   # refers to application_
 APP_STATIC = os.path.join(APP_ROOT, 'static')
 
 app.config['MONGODB_SETTINGS'] = {
-    # 'db': 'gesacom'
-    'db': 'gesacom',
-    'host': 'localhost',
-    'port': 17715
+    'db': 'gesacom'
+    # 'db': 'gesacom',
+    # 'host': 'localhost',
+    # 'port': 17715
 }
 
 app.config["MAIL_SERVER"] = 'smtp.gmail.com'
@@ -72,8 +72,8 @@ app.config.update(
     SECRET_KEY='AIzaSyBBT8JaFtFr2Gknpe5GxvhYMWdxkxULHSc',
     GOOGLE_LOGIN_CLIENT_ID='667156749456-lbd0uctkmb0vscjn2q0e1420f20fu435.apps.googleusercontent.com',
     GOOGLE_LOGIN_CLIENT_SECRET='TOTRxDbDVTyC-I3uZ0ATX3kJ',
-    # GOOGLE_LOGIN_REDIRECT_URI='http://localhost:9090/user/oauth2callback'
-    GOOGLE_LOGIN_REDIRECT_URI='http://fdt.accentcom.agency/user/oauth2callback'
+    GOOGLE_LOGIN_REDIRECT_URI='http://localhost:9090/user/oauth2callback'
+    # GOOGLE_LOGIN_REDIRECT_URI='http://fdt.accentcom.agency/user/oauth2callback'
 )
 
 google_login = GoogleLogin(app)

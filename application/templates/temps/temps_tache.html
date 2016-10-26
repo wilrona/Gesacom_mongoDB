@@ -30,7 +30,7 @@
                 <th width="20%">Date</th>
                 <th width="50%">Description</th>
                 <th width="15%">Temps</th>
-                {% if tache.user_id.id == session.get('user_id') and not tache.closed and not tache.end %}
+                {% if tache.user_id.id|string == session.get('user_id'|string) and not tache.closed and not tache.end %}
                 <th width="15%">Action</th>
                 {% endif %}
             </tr>
@@ -41,7 +41,7 @@
                     <td>{{ data.date|format_date('%d/%m/%Y') }}</td>
                     <td>{{ data.description }}</td>
                     <td>{{ data.heure|format_date('%H:%M') }}</td>
-                       {% if tache.user_id.id == session.get('user_id') and not tache.closed and not tache.end %}
+                       {% if tache.user_id.id|string == session.get('user_id')|string and not tache.closed and not tache.end %}
                     <td>
 
                             <a href="{{ url_for('temps_tache.edit', tache_id=tache_id, detail_fdt_id=data.id) }}" class="btn btn-link btn-xs btn-xs" data-toggle="modal" data-target="#myModal" data-backdrop="static" ><i class="fa fa-pencil-square-o"></i></a>

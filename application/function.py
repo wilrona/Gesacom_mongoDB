@@ -60,7 +60,7 @@ def datetime_convert(time): # Convertis time sous la forme YYYY-MM-DD HH:MM:SS
         except IndexError:
             hour = int(_list[0])
             minute = int(_list[1])
-            time = datetime.datetime(hour, minute)
+            time = datetime.datetime(2000, 1, 1, hour, minute)
             return time
 
 

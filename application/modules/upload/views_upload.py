@@ -450,7 +450,6 @@ def etape2():
                 frai.montant = frais['montant']
                 frai.save()
 
-
     if result['status'] == 200:
         return 'True'
     else:

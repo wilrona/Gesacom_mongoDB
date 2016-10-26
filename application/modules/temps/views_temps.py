@@ -183,8 +183,8 @@ def index(tache_id):
     datas = []
     pagination = None
     if temps:
-        count = DetailTemps.objects(temps_id =temps.id).order('-date', 'ordre').count()
-        datas = DetailTemps.objects(temps_id =temps.id).order('-date', 'ordre').skip(offset).limit(limit)
+        count = DetailTemps.objects(temps_id =temps.id).order_by('-date', 'ordre').count()
+        datas = DetailTemps.objects(temps_id =temps.id).order_by('-date', 'ordre').skip(offset).limit(limit)
         pagination = Pagination(css_framework='bootstrap3', per_page=25, page=page, total=count, search=search, record_name='Feuille de temps')
 
 
@@ -236,7 +236,7 @@ def edit(tache_id, detail_fdt_id=None):
         detail_fdt.conversion = conversion
 
         if temps:
-            detail_fdt.temps_id = temps.id
+            detail_fdt.temps_id = temps
         else:
             temps = Temps()
             temps.user_id = tache.user_id
@@ -253,7 +253,7 @@ def edit(tache_id, detail_fdt_id=None):
             )
 
             if len(exist_temps):
-                ordre += exist_temps
+                ordre += len(exist_temps)
 
             detail_fdt.ordre = ordre
 
