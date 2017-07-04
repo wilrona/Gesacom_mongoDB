@@ -654,19 +654,19 @@ def formation_delete(user_id, tache_id):
     userC = Users.objects.get(id=session.get('user_id'))
 
     time_zones = pytz.timezone('Africa/Douala')
-    date_now = datetime.datetime.now(time_zones)
+    date_now = datetime.datetime.now(time_zones).strftime("%Y-%m-%d %H:%M:%S")
 
     save = False
     for action in taches.notified():
         if action.notified:
-            dif = date_now - action.date
-            if dif.time().hour >= 1:
+            dif = datetime.datetime.strptime(date_now, "%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(action.date.strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+            if dif.seconds >= 3600:
                 save = True
 
     if save:
         update = Update_User()
 
-        update.date = date_now
+        update.date = function.datetime_convert(date_now)
         update.user = str(taches.user_id.id)
         update.action = 'delete_tache'
         update.notified = True

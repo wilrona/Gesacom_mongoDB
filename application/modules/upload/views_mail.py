@@ -14,16 +14,18 @@ def tache():
     all_tache = Tache.objects(updated__notified=True)
 
     time_zones = pytz.timezone('Africa/Douala')
-    date_now = datetime.datetime.now(time_zones)
+    date_now = datetime.datetime.now(time_zones).strftime("%Y-%m-%d %H:%M:%S")
 
     titre = 'Notification de votre tache'
 
     for taches in all_tache:
         for item in taches.notified():
 
-            dif = date_now - item.date
+            # dif = date_now - item.date
 
-            if dif.time().hour >= 1:
+            dif = datetime.datetime.strptime(date_now, "%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(item.date.strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+
+            if dif.seconds >= 3600:
                 create = 0
                 date = str(function.format_date(item.date), '%d/%m/%Y')
                 user = item.user.first_name+" "+item.user.last_name
@@ -70,14 +72,15 @@ def projet():
     all_projet = Projet.objects(updated__notified=True)
 
     time_zones = pytz.timezone('Africa/Douala')
-    date_now = datetime.datetime.now(time_zones)
+    date_now = datetime.datetime.now(time_zones).strftime("%Y-%m-%d %H:%M:%S")
 
     titre = 'Notification de votre tache'
 
     for projets in all_projet:
         for item in projets.notified():
-            dif = date_now - item.date
-            if dif.time().hour >= 1:
+            # dif = date_now - item.date
+            dif = datetime.datetime.strptime(date_now, "%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(item.date.strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+            if dif.seconds >= 3600:
                 create = 0
                 date = str(function.format_date(item.date), '%d/%m/%Y')
                 user = item.user.first_name+" "+item.user.last_name
@@ -175,7 +178,7 @@ def besoin():
     from ..projet.models_projet import BesoinFinancier
 
     time_zones = pytz.timezone('Africa/Douala')
-    date_now = datetime.datetime.now(time_zones)
+    date_now = datetime.datetime.now(time_zones).strftime("%Y-%m-%d %H:%M:%S")
 
     titre = 'Notification de votre besoin'
 
@@ -183,8 +186,9 @@ def besoin():
 
     for besoin in all_besoin:
         for item in besoin.notified():
-            dif = date_now - item.date
-            if dif.time().hour >= 1:
+            dif = datetime.datetime.strptime(date_now, "%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(item.date.strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+            # dif = date_now - item.date
+            if dif.seconds >= 3600:
 
                 if item.action == 'valide_besoin':
                     subtitle = 'Validation du besoin financier'
