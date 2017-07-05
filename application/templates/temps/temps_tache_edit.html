@@ -28,7 +28,7 @@
       <div class="form-group">
         {{ form.heure.label(class_='col-sm-3 control-label') }}
         <div class="col-sm-9">
-        <input type="text" name="heure" value="{{ detail_fdt.heure|format_date("%H:%M") }}" class='form-control' id="timepicker"/>
+        <input type="text" name="heure" value="{% if detail_fdt.heure and detail_fdt %} {{ detail_fdt.heure|format_date("%H:%M") }} {% endif %}" class='form-control' id="timepicker"/>
         {% for message in form.heure.errors %}
             <div class="alert alert-danger form-validator">{{ message }}</div>
         {% endfor %}
