@@ -27,7 +27,7 @@ def tache():
 
             if dif.seconds >= 3600:
                 create = 0
-                date = str(function.format_date(item.date), '%d/%m/%Y')
+                date = str(function.format_date(item.date, '%d/%m/%Y'))
                 user = item.user.first_name+" "+item.user.last_name
 
                 msg = Message()
