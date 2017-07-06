@@ -194,7 +194,7 @@ def edit(tache_id=None):
     if form.validate_on_submit():
         tache.titre = form.titre.data
         tache.description = form.description.data
-        tache.heure = form.heure.data
+        tache.heure = int(form.heure.data)
 
         user = Users.objects.get(id=form.user_id.data)
         tache.user_id = user
@@ -226,7 +226,7 @@ def edit(tache_id=None):
             taches = Tache.objects(projet_id=projet.id)
             heure_total = 0
             for tache_heure in taches:
-                heure_total += tache_heure.heure
+                heure_total += int(tache_heure.heure)
 
             if tache_id:
                 heure_total -= int(form.heure.data)
@@ -311,7 +311,7 @@ def hors_projet(tache_id=None):
     if form.validate_on_submit():
         tache.titre = form.titre.data
         tache.description = form.description.data
-        tache.heure = form.heure.data
+        tache.heure = int(form.heure.data)
 
         user = Users.objects.get(id=form.user_id.data)
         tache.user_id = user
@@ -560,7 +560,6 @@ def edit(projet_id, tache_id=None):
     else:
         tache = Tache()
         form = FormTache()
-
 
     form.projet_id.choices = [(str(projet.id), projet.titre)]
 

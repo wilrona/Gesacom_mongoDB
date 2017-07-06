@@ -15,7 +15,7 @@
           <div class="container-fluid">
             <div class="btn-toolbar" role="toolbar">
               <div class="btn-group pull-right">
-                <a href="{{ url_for('tache_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if (not current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) or not projet.responsable_id.id == session.get('user_id'))  %}  disabled {% endif %} {% if projet.suspend and projet.closed %} disabled {% endif %}" data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
+                <a href="{{ url_for('tache_projet.edit', projet_id=projet_id) }}" class="btn btn-primary {% if (not current_user.has_roles([('super_admin', 'projet_tache')], ['edit']) or not projet.responsable_id.id == session.get('user_id')) and projet.suspend and projet.closed  %}  disabled {% endif %} " data-toggle="modal" data-target="#myModal" data-backdrop="static">Creer</a>
               </div>
             </div>
           </div>

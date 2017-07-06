@@ -29,7 +29,7 @@ def controle_date_start(form, field):
 class FormTache(wtf.Form):
     titre = wtf.StringField(label='Nom de la tache :', validators=[validators.Required('Champ Obligatoire')])
     description = wtf.TextAreaField(label='Description :')
-    heure = wtf.IntegerField(label='Nombre d\'heure :', default=0, widget=NumberInput(), validators=[validators.Required('Champ Obligatoire')])
+    heure = wtf.StringField(label='Nombre d\'heure :', default=0, widget=NumberInput(), validators=[validators.Required('Champ Obligatoire')])
     date_start = wtf.DateField(label='Date de debut :', format='%d/%m/%Y', default=datetime.date.today(), validators=[controle_date_start])
     facturable = wtf.StringField(label='Facturation :', validators=[validators.Required('Champ Obligatoire')])
     projet_id = wtf.SelectField(label='Projet :', coerce=str, validators=[projet_id_required])
