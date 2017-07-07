@@ -82,7 +82,7 @@ def projet():
             dif = datetime.datetime.strptime(date_now, "%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(item.date.strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
             if dif.seconds >= 3600:
                 create = 0
-                date = str(function.format_date(item.date), '%d/%m/%Y')
+                date = str(function.format_date(item.date, '%d/%m/%Y'))
                 user = item.user.first_name+" "+item.user.last_name
 
                 subtitle = ' Creation du projet'

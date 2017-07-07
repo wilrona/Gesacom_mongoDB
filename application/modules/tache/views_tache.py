@@ -285,8 +285,7 @@ def hors_projet(tache_id=None):
         form = FormTache()
     # form.contact.data = "contact"
 
-
-    form.projet_id.choices = [(0, 'Selectionnez un projet')]
+    form.projet_id.choices = [('', 'Selectionnez un projet')]
     for projet in Projet.objects(closed=False):
         form.projet_id.choices.append((str(projet.id), projet.titre))
 
@@ -613,9 +612,9 @@ def edit(projet_id, tache_id=None):
             taches = Tache.objects(projet_id = projet.id)
             heure_total = 0
             for tache_heure in taches:
-                heure_total += tache_heure.heure
+                heure_total += int(tache_heure.heure)
 
-            heure_total += form.heure.data
+            heure_total += int(form.heure.data)
             heure_restant = heure - heure_total
             if heure_restant < 0:
                 form.heure.errors.append('Heure ventillee superieur a l\'heure total du projet' + str(heure_restant))
